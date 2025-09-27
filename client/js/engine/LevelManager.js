@@ -178,6 +178,8 @@ export class LevelManager {
                 return new Level3(levelNumber, config);
             case 4:
                 return new Level4(levelNumber, config);
+            case 5:
+                return new Level5(levelNumber, config);
             default:
                 return new Level(levelNumber, config);
         }
