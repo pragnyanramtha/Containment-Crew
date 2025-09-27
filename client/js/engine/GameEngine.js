@@ -32,28 +32,28 @@ export class GameEngine {
         // Sprite system
         this.spriteManager = new SpriteManager();
         this.spriteRenderer = new SpriteRenderer(this.ctx, this.spriteManager);
-        
+
         // Level management
         this.levelManager = new LevelManager(this);
-        
+
         // Dialogue system
         this.dialogueSystem = new DialogueSystem(this);
-        
+
         // Tutorial system
         this.tutorialManager = new TutorialManager(this);
-        
+
         // Combat system
         this.combatSystem = new CombatSystem(this);
-        
+
         // Enemy management
         this.enemyManager = new EnemyManager(this);
-        
+
         // Death management
         this.deathManager = new DeathManager(this);
-        
+
         // Character management
         this.characterManager = new CharacterManager();
-        
+
         // Game state
         this.gameState = 'character_selection'; // 'character_selection', 'playing'
         this.selectedCharacter = null;
@@ -84,7 +84,7 @@ export class GameEngine {
         // Initial resize
         this.handleResize();
     }
-    
+
     createEnemySprites() {
         // Create zombie sprites
         const zombieColors = {
@@ -92,13 +92,13 @@ export class GameEngine {
             indicator: '#ffffff',
             border: '#224422'
         };
-        
+
         const bossColors = {
             body: '#aa4444',
             indicator: '#ffffff',
             border: '#442222'
         };
-        
+
         this.spriteManager.createDirectionalSprites('zombie_weak', 28, 28, zombieColors);
         this.spriteManager.createDirectionalSprites('zombie_normal', 32, 32, zombieColors);
         this.spriteManager.createDirectionalSprites('mutant_boss', 48, 48, bossColors);
@@ -109,12 +109,12 @@ export class GameEngine {
         this.isRunning = true;
         this.lastTime = performance.now();
         requestAnimationFrame(this.gameLoop);
-        
+
         // Start with character selection
         this.gameState = 'character_selection';
         console.log('Please select your character...');
     }
-    
+
     async startGame() {
         console.log('Starting game with Level 0...');
         this.gameState = 'playing';
@@ -132,27 +132,27 @@ export class GameEngine {
         if (this.levelManager) {
             this.levelManager.destroy();
         }
-        
+
         // Clean up dialogue system
         if (this.dialogueSystem) {
             this.dialogueSystem.destroy();
         }
-        
+
         // Clean up tutorial system
         if (this.tutorialManager) {
             this.tutorialManager.destroy();
         }
-        
+
         // Clean up combat system
         if (this.combatSystem) {
             // Combat system doesn't need explicit cleanup
         }
-        
+
         // Clean up enemy manager
         if (this.enemyManager) {
             this.enemyManager.clearAllEnemies();
         }
-        
+
         // Clean up death manager
         if (this.deathManager) {
             this.deathManager.reset();
@@ -197,57 +197,57 @@ export class GameEngine {
         if (this.gameState === 'character_selection') {
             return;
         }
-        
+
         // Don't update if game is over
         if (this.deathManager.isGameOver()) {
             this.deathManager.update(deltaTime);
             return;
         }
-        
+
         const players = Array.from(this.players.values());
         const currentLevel = this.getCurrentLevel();
-        
+
         // Update all players
         for (const player of players) {
             player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
         }
-        
+
         // Update combat system
         this.combatSystem.update(deltaTime);
-        
+
         // Handle combat input
         this.combatSystem.handleInput(this.keys);
-        
+
         // Update enemy manager
         this.enemyManager.update(deltaTime, players, currentLevel);
-        
+
         // Update combat between enemies and players
         this.updateCombatInteractions(deltaTime);
-        
+
         // Update death manager
         this.deathManager.update(deltaTime);
-        
+
         // Update level manager
         this.levelManager.update(deltaTime, players);
-        
+
         // Update dialogue system
         this.dialogueSystem.update(deltaTime, players);
-        
+
         // Update tutorial system
         this.tutorialManager.update(deltaTime, players);
     }
-    
+
     updateCombatInteractions(deltaTime) {
         const players = Array.from(this.players.values());
         const enemies = this.enemyManager.getAllEnemies();
-        
+
         // Check enemy attacks on players
         for (const enemy of enemies) {
             if (!enemy.isAlive) continue;
-            
+
             for (const player of players) {
                 if (!player.isAlive) continue;
-                
+
                 // Try enemy attack
                 if (this.combatSystem.tryEnemyAttack(enemy, player)) {
                     // Attack was successful
@@ -265,7 +265,7 @@ export class GameEngine {
             this.renderCharacterSelection();
             return;
         }
-        
+
         // Render current level (includes background clearing)
         this.levelManager.render(this.ctx, this.spriteRenderer);
 
@@ -292,7 +292,7 @@ export class GameEngine {
         // Render debug info
         this.renderDebugInfo();
     }
-    
+
     renderCharacterSelection() {
         this.characterManager.renderCharacterSelection(this.ctx, this.selectedCharacter);
     }
@@ -322,7 +322,7 @@ export class GameEngine {
         if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft', 'ShiftRight'].includes(event.code)) {
             event.preventDefault();
         }
-        
+
         // Handle attack input immediately for responsiveness
         if (event.code === 'Space' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
             const localPlayer = this.getLocalPlayer();
@@ -331,10 +331,10 @@ export class GameEngine {
             }
         }
     }
-    
+
     handleCharacterSelection(event) {
         const characters = Object.keys(this.characterManager.getAllCharacterTypes());
-        
+
         // Number keys 1-5 for character selection
         if (event.code >= 'Digit1' && event.code <= 'Digit5') {
             const index = parseInt(event.code.slice(-1)) - 1;
@@ -343,23 +343,23 @@ export class GameEngine {
                 console.log(`Selected character: ${this.selectedCharacter}`);
             }
         }
-        
+
         // Enter to confirm selection
         if (event.code === 'Enter' && this.selectedCharacter) {
             this.confirmCharacterSelection();
         }
     }
-    
+
     confirmCharacterSelection() {
         console.log(`Confirming character selection: ${this.selectedCharacter}`);
-        
+
         // Apply character to test player
         const testPlayer = this.getLocalPlayer();
         if (testPlayer) {
             this.characterManager.applyCharacterStats(testPlayer, this.selectedCharacter);
             this.characterManager.selectCharacter(testPlayer.id, this.selectedCharacter);
         }
-        
+
         // Start the game
         this.gameState = 'playing';
         this.startGame();
@@ -511,7 +511,7 @@ export class GameEngine {
 
         // Create test player sprite
         this.spriteManager.createDirectionalSprites('player_test-player', 32, 32, playerColors[0]);
-        
+
         // Create enemy sprites
         this.createEnemySprites();
     }
@@ -540,30 +540,30 @@ export class GameEngine {
     getLocalPlayer() {
         return this.players.get(this.localPlayerId);
     }
-    
+
     // Level management methods
     getCurrentLevel() {
         return this.levelManager.getCurrentLevel();
     }
-    
+
     getCurrentLevelNumber() {
         return this.levelManager.getCurrentLevelNumber();
     }
-    
+
     async changeLevel(levelNumber) {
         return await this.levelManager.changeLevel(levelNumber);
     }
-    
+
     // Combat system access
     getCombatSystem() {
         return this.combatSystem;
     }
-    
+
     // Enemy management access
     getEnemyManager() {
         return this.enemyManager;
     }
-    
+
     // Death management access
     getDeathManager() {
         return this.deathManager;
@@ -580,7 +580,7 @@ export class GameEngine {
         // Player count and status
         const gameStats = this.deathManager.getGameStats();
         this.ctx.fillText(`Players: ${gameStats.alivePlayers}/${gameStats.totalPlayers} alive`, 10, 35);
-        
+
         // Enemy count
         const aliveEnemies = this.enemyManager.getAliveEnemies().length;
         this.ctx.fillText(`Enemies: ${aliveEnemies}`, 10, 140);
