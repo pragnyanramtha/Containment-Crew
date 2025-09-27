@@ -35,6 +35,38 @@ export class CombatSystem {
             damageNumber.alpha = damageNumber.timeLeft / this.config.damageNumberDuration;
             return damageNumber.timeLeft > 0;
         });
+        
+        // Process boss area attacks
+        this.processBossAreaAttacks(deltaTime);
+    }
+    
+    processBossAreaAttacks(deltaTime) {
+        const currentLevel = this.gameEngine.getCurrentLevel();
+        if (!currentLevel || !currentLevel.effects) return;
+        
+        for (const effect of currentLevel.effects) {
+            if (effect.type === 'boss_area_attack' && !effect.damageDealt) {
+                // Check if warning time has passed
+                const elapsed = effect.maxTime - effect.timeLeft;
+                if (elapsed >= effect.warningTime) {
+                    // Deal damage to all players in range
+                    const players = Array.from(this.gameEngine.players.values());
+                    for (const player of players) {
+                        if (!player.isAlive) continue;
+                        
+                        const playerCenterX = player.x + player.width / 2;
+                        const playerCenterY = player.y + player.height / 2;
+                        const distance = this.getDistance(effect.x, effect.y, playerCenterX, playerCenterY);
+                        
+                        if (distance <= effect.radius) {
+                            this.damagePlayer(player, effect.damage, effect.x, effect.y);
+                        }
+                    }
+                    
+                    effect.damageDealt = true; // Prevent multiple damage applications
+                }
+            }
+        }
     }
     
     // Player attack system with swing mechanics
