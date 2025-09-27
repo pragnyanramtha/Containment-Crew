@@ -427,6 +427,62 @@ export class Level {
                 ctx.fill();
                 break;
                 
+            case 'radiation_death':
+                // Final player radiation death effect
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 30 * (1 - alpha * 0.5), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Radiation particles
+                for (let i = 0; i < 12; i++) {
+                    const angle = (Math.PI * 2 * i) / 12;
+                    const distance = 40 * (1 - alpha);
+                    const particleX = effect.x + Math.cos(angle) * distance;
+                    const particleY = effect.y + Math.sin(angle) * distance;
+                    
+                    ctx.fillStyle = '#ffff00';
+                    ctx.beginPath();
+                    ctx.arc(particleX, particleY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+                
+            case 'rock_impact':
+                // Falling rock impact effect
+                ctx.fillStyle = '#888888';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 20 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Dust particles
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI * 2 * i) / 6;
+                    const distance = 15 * (1 - alpha);
+                    const particleX = effect.x + Math.cos(angle) * distance;
+                    const particleY = effect.y + Math.sin(angle) * distance;
+                    
+                    ctx.fillStyle = '#aaaaaa';
+                    ctx.beginPath();
+                    ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+                
+            case 'radiation_damage':
+                // Radiation damage effect on player
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 15 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Radiation symbol
+                ctx.fillStyle = '#ffff00';
+                ctx.font = 'bold 12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('☢', effect.x, effect.y + 4);
+                break;
+                
             default:
                 // Default attack effect
                 ctx.fillStyle = '#ffff44';
