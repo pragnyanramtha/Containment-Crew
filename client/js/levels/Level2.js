@@ -486,6 +486,34 @@ export class Level2 extends Level {
             yOffset += 15;
         }
         
+        // Show boss status
+        if (this.bossSpawned && !this.bossDefeated) {
+            const gameEngine = this.gameEngine;
+            if (gameEngine && gameEngine.getEnemyManager) {
+                const enemyManager = gameEngine.getEnemyManager();
+                const enemies = enemyManager.getAllEnemies();
+                const boss = enemies.find(enemy => enemy.type === 'mutant_boss');
+                
+                if (boss) {
+                    ctx.fillStyle = '#ff6666';
+                    ctx.font = 'bold 12px monospace';
+                    ctx.fillText('BOSS STATUS:', 10, yOffset + 10);
+                    
+                    if (boss.isInactive) {
+                        ctx.fillStyle = '#666666';
+                        ctx.fillText('INACTIVE - Target eliminated', 10, yOffset + 25);
+                    } else if (boss.selectedTarget) {
+                        ctx.fillStyle = '#ff4444';
+                        ctx.fillText(`Targeting: ${boss.selectedTarget.id}`, 10, yOffset + 25);
+                    } else {
+                        ctx.fillStyle = '#ffaa00';
+                        ctx.fillText('Selecting target...', 10, yOffset + 25);
+                    }
+                    yOffset += 40;
+                }
+            }
+        }
+        
         // Show sacrifice status
         if (this.sacrificePhase && !this.sacrificeCompleted) {
             ctx.fillStyle = '#ffff00';
