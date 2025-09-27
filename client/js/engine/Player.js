@@ -115,22 +115,49 @@ export class Player {
     }
     
     render(ctx, spriteRenderer = null) {
-        if (!this.isAlive) return;
-        
         if (spriteRenderer) {
             // Use sprite rendering
             const spriteName = `${this.spriteBaseName}_${this.direction}`;
-            spriteRenderer.drawSprite(spriteName, this.x, this.y, this.spriteScale);
+            if (this.isAlive) {
+                spriteRenderer.drawSprite(spriteName, this.x, this.y, this.spriteScale);
+            } else {
+                // Render dead player with different visual
+                this.renderDeadPlayer(ctx, spriteRenderer);
+            }
         } else {
             // Fallback to simple rectangle rendering
             this.renderSimple(ctx);
         }
         
-        // Draw health bar
-        this.renderHealthBar(ctx);
+        // Draw health bar (only for alive players)
+        if (this.isAlive) {
+            this.renderHealthBar(ctx);
+        }
         
         // Draw player name/ID
         this.renderPlayerInfo(ctx);
+    }
+    
+    renderDeadPlayer(ctx, spriteRenderer) {
+        // Render dead player as a darker, semi-transparent version
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        
+        // Draw a tombstone or skull symbol
+        ctx.fillStyle = '#666666';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Draw X or skull symbol
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(this.x + 5, this.y + 5);
+        ctx.lineTo(this.x + this.width - 5, this.y + this.height - 5);
+        ctx.moveTo(this.x + this.width - 5, this.y + 5);
+        ctx.lineTo(this.x + 5, this.y + this.height - 5);
+        ctx.stroke();
+        
+        ctx.restore();
     }
     
     renderSimple(ctx) {
