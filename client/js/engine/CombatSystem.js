@@ -6,13 +6,14 @@ export class CombatSystem {
         
         // Combat configuration
         this.config = {
-            playerAttackRange: 50,
-            playerAttackDamage: 25,
-            playerAttackCooldown: 0.5, // seconds
+            playerAttackRange: 80, // Increased range for swing attacks
+            playerAttackCooldown: 0.7, // seconds
             enemyAttackRange: 40,
-            enemyAttackDamage: 15,
+            enemyAttackDamage: 25, // 1 heart of damage (25 HP)
             enemyAttackCooldown: 1.0,
-            damageNumberDuration: 1.0 // seconds
+            damageNumberDuration: 1.0, // seconds
+            swingAngle: Math.PI / 3, // 60 degree swing arc
+            swingWidth: 100 // Width of swing attack
         };
     }
     

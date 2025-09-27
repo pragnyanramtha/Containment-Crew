@@ -275,6 +275,26 @@ export class Player {
         const displayText = this.isAlive ? this.id : `${this.id} (DEAD)`;
         ctx.fillText(displayText, textX, textY);
         
+        // Draw dash cooldown indicator
+        if (this.dashCooldown > 0) {
+            const cooldownPercent = this.dashCooldown / this.dashCooldownMax;
+            ctx.fillStyle = 'rgba(255, 255, 0, 0.7)';
+            ctx.fillRect(this.x, this.y - 25, this.width * (1 - cooldownPercent), 3);
+            
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(this.x, this.y - 25, this.width, 3);
+        }
+        
+        // Draw dash effect
+        if (this.isDashing) {
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+            ctx.restore();
+        }
+        
         // Reset text alignment
         ctx.textAlign = 'left';
     }
