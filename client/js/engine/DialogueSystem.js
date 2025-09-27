@@ -175,6 +175,7 @@ export class DialogueSystem {
     updateTypewriter(deltaTime) {
         if (!this.isTyping) return;
         
+        const previousLength = this.currentText.length;
         this.typewriterProgress += deltaTime * this.typewriterSpeed;
         const targetLength = Math.floor(this.typewriterProgress);
         
@@ -185,6 +186,15 @@ export class DialogueSystem {
         } else {
             // Update current text
             this.currentText = this.fullText.substring(0, targetLength);
+            
+            // Play typing sound effect when new character is revealed
+            if (this.currentText.length > previousLength && this.gameEngine.getAudioManager()) {
+                // Only play sound for visible characters (not spaces)
+                const newChar = this.currentText[this.currentText.length - 1];
+                if (newChar && newChar !== ' ') {
+                    this.gameEngine.getAudioManager().playSFX('dialogue_type', 0.4, 1.0 + (Math.random() - 0.5) * 0.2);
+                }
+            }
         }
     }
     
