@@ -300,6 +300,9 @@ export class GameEngine {
 
         // Render debug info
         this.renderDebugInfo();
+
+        // Render developer settings debug info
+        this.developerSettings.renderDebugInfo(this.ctx);
     }
 
     renderCharacterSelection() {
