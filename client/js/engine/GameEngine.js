@@ -116,9 +116,8 @@ export class GameEngine {
     }
 
     render() {
-        // Clear canvas with dark background
-        this.ctx.fillStyle = '#1a1a1a';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Render current level (includes background clearing)
+        this.levelManager.render(this.ctx, this.spriteRenderer);
 
         // Render all players with sprite system
         for (const player of this.players.values()) {
