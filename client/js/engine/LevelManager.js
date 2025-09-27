@@ -4,6 +4,7 @@ import { Level1 } from '../levels/Level1.js';
 import { Level2 } from '../levels/Level2.js';
 import { Level3 } from '../levels/Level3.js';
 import { Level4 } from '../levels/Level4.js';
+import { Level5 } from '../levels/Level5.js';
 
 /**
  * LevelManager handles level loading, transitions, and progression
