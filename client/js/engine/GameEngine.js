@@ -79,9 +79,9 @@ export class GameEngine {
         this.ctx.fillStyle = '#1a1a1a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Render all players
+        // Render all players with sprite system
         for (const player of this.players.values()) {
-            player.render(this.ctx);
+            player.render(this.ctx, this.spriteRenderer);
         }
         
         // Render debug info
