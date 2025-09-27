@@ -9,7 +9,87 @@
 </head>
 
 <body>
-    <div class="game-container">
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="lobby-screen">
+        <div class="lobby-container">
+            <h1 class="game-title">SACRIFICES MUST BE MADE</h1>
+            <p class="game-subtitle">A cooperative survival game for exactly 3 players</p>
+            
+            <div class="lobby-content">
+                <!-- Main Menu -->
+                <div id="mainMenu" class="menu-section active">
+                    <div class="menu-buttons">
+                        <button id="createRoomBtn" class="menu-btn primary">CREATE ROOM</button>
+                        <button id="joinRoomBtn" class="menu-btn">JOIN ROOM</button>
+                    </div>
+                </div>
+                
+                <!-- Create Room -->
+                <div id="createRoomMenu" class="menu-section">
+                    <h2>Create New Room</h2>
+                    <div class="input-group">
+                        <label for="hostNameInput">Your Name:</label>
+                        <input type="text" id="hostNameInput" maxlength="20" placeholder="Enter your name">
+                    </div>
+                    <div class="menu-buttons">
+                        <button id="confirmCreateBtn" class="menu-btn primary">CREATE</button>
+                        <button id="backFromCreateBtn" class="menu-btn">BACK</button>
+                    </div>
+                </div>
+                
+                <!-- Join Room -->
+                <div id="joinRoomMenu" class="menu-section">
+                    <h2>Join Room</h2>
+                    <div class="input-group">
+                        <label for="playerNameInput">Your Name:</label>
+                        <input type="text" id="playerNameInput" maxlength="20" placeholder="Enter your name">
+                    </div>
+                    <div class="input-group">
+                        <label for="roomCodeInput">Room Code:</label>
+                        <input type="text" id="roomCodeInput" maxlength="6" placeholder="Enter room code">
+                    </div>
+                    <div class="menu-buttons">
+                        <button id="confirmJoinBtn" class="menu-btn primary">JOIN</button>
+                        <button id="backFromJoinBtn" class="menu-btn">BACK</button>
+                    </div>
+                </div>
+                
+                <!-- Waiting Room -->
+                <div id="waitingRoom" class="menu-section">
+                    <h2>Waiting Room</h2>
+                    <div class="room-info">
+                        <p>Room Code: <span id="displayRoomCode" class="room-code"></span></p>
+                        <p class="room-instruction">Share this code with your friends!</p>
+                    </div>
+                    
+                    <div class="players-list">
+                        <h3>Players (<span id="playerCount">0</span>/3)</h3>
+                        <div id="playersList" class="players-container">
+                            <!-- Players will be added dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="ready-section">
+                        <button id="readyBtn" class="menu-btn ready-btn">READY</button>
+                        <p id="readyStatus" class="ready-status">Click READY when you're prepared to start</p>
+                    </div>
+                    
+                    <div class="menu-buttons">
+                        <button id="leaveRoomBtn" class="menu-btn">LEAVE ROOM</button>
+                    </div>
+                </div>
+                
+                <!-- Error Messages -->
+                <div id="errorMessage" class="error-message"></div>
+                
+                <!-- Connection Status -->
+                <div id="lobbyConnectionStatus" class="lobby-connection-status">Connecting to server...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-container" style="display: none;">
         <canvas id="gameCanvas"></canvas>
         <div class="ui-overlay">
             <button id="fullscreenBtn" class="fullscreen-btn">Fullscreen</button>
