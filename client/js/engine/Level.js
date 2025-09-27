@@ -376,7 +376,43 @@ export class Level {
      * Override in subclasses for objective-specific logic
      */
     checkObjective(objective, players, gameEngine) {
-        // Base implementation - override in subclasses
+        // Common objectives that can be handled in base class
+        switch (objective) {
+            case 'defeat_all_enemies':
+                if (gameEngine && gameEngine.getEnemyManager()) {
+                    const aliveEnemies = gameEngine.getEnemyManager().getAliveEnemies();
+                    return aliveEnemies.length === 0;
+                }
+                return false;
+                
+            case 'survive':
+                // Check if at least one player is alive
+                return players.some(player => player.isAlive);
+                
+            default:
+                // Level-specific objectives handled in subclasses
+                return false;
+        }
+    }
+    
+    /**
+     * Check for collision with level boundaries and obstacles
+     */
+    checkCollision(entity) {
+        // Check bounds
+        if (entity.x < 0 || entity.y < 0 || 
+            entity.x + entity.width > this.bounds.width || 
+            entity.y + entity.height > this.bounds.height) {
+            return true;
+        }
+        
+        // Check collision with level objects
+        for (const obj of this.objects) {
+            if (obj.solid && entity.isCollidingWith && entity.isCollidingWith(obj)) {
+                return true;
+            }
+        }
+        
         return false;
     }
     
