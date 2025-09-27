@@ -150,66 +150,55 @@ export class Enemy {
     }
     
     bossAI(deltaTime, players, level) {
+        // Initialize boss-specific properties if not set
+        if (!this.bossInitialized) {
+            this.bossInitialized = true;
+            this.selectedTarget = null;
+            this.hasGrabbedTarget = false;
+            this.isInactive = false; // Boss becomes inactive when target dies
+            this.originalSpeed = this.speed;
+            
+            // Select one random target from alive players
+            const alivePlayers = players.filter(p => p.isAlive);
+            if (alivePlayers.length > 0) {
+                this.selectedTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+                console.log(`Boss has selected target: ${this.selectedTarget.id}`);
+            }
+        }
+        
+        // If boss is inactive (target died), stop all actions
+        if (this.isInactive) {
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.target = null;
+            return;
+        }
+        
+        // Check if selected target is still alive
+        if (this.selectedTarget && !this.selectedTarget.isAlive) {
+            console.log(`Boss target ${this.selectedTarget.id} has died. Boss becomes inactive.`);
+            this.isInactive = true;
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.target = null;
+            return;
+        }
+        
+        // Set target to selected target only
+        this.target = this.selectedTarget;
+        
         if (!this.target) return;
         
         const distanceToTarget = this.getDistanceToTarget();
         
-        // Initialize boss-specific properties if not set
-        if (!this.bossPhase) {
-            this.bossPhase = 1;
-            this.specialAttackCooldown = 0;
-            this.chargeAttackCooldown = 0;
-            this.areaAttackCooldown = 0;
-            this.lastSpecialAttack = 0;
-            this.isCharging = false;
-            this.chargeTarget = null;
-            this.chargeSpeed = 200;
-            this.originalSpeed = this.speed;
-        }
-        
-        // Update boss phase based on health
-        const healthPercent = this.health / this.maxHealth;
-        if (healthPercent <= 0.3 && this.bossPhase < 3) {
-            this.bossPhase = 3; // Enraged phase
-            this.speed = this.originalSpeed * 1.3;
-        } else if (healthPercent <= 0.6 && this.bossPhase < 2) {
-            this.bossPhase = 2; // Aggressive phase
-            this.speed = this.originalSpeed * 1.1;
-        }
-        
-        // Update special attack cooldowns
-        if (this.specialAttackCooldown > 0) {
-            this.specialAttackCooldown -= deltaTime;
-        }
-        if (this.chargeAttackCooldown > 0) {
-            this.chargeAttackCooldown -= deltaTime;
-        }
-        if (this.areaAttackCooldown > 0) {
-            this.areaAttackCooldown -= deltaTime;
-        }
-        
-        // Handle charging attack
-        if (this.isCharging) {
-            this.handleChargeAttack(deltaTime, players, level);
+        // Simple boss behavior - just move towards target and attack when close
+        if (distanceToTarget <= 60 && this.attackCooldown <= 0) {
+            // Attack the target
+            this.attackCooldown = 1.5; // Slower attack rate
             return;
         }
         
-        // Choose attack pattern based on distance and phase
-        if (distanceToTarget <= 80) {
-            // Close range - try special attacks
-            if (this.bossPhase >= 2 && this.areaAttackCooldown <= 0 && Math.random() < 0.3) {
-                this.performAreaAttack(players);
-            } else if (this.attackCooldown <= 0) {
-                // Regular melee attack
-                return;
-            }
-        } else if (distanceToTarget <= 200 && this.chargeAttackCooldown <= 0 && this.bossPhase >= 2) {
-            // Medium range - charge attack
-            this.initiateChargeAttack();
-            return;
-        }
-        
-        // Default movement towards target
+        // Move towards the selected target (very slowly)
         this.moveTowardsTarget(deltaTime, level);
     }
     
