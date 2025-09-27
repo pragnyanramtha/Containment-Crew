@@ -258,6 +258,12 @@ export class GameEngine {
     }
 
     render() {
+        // Render character selection screen
+        if (this.gameState === 'character_selection') {
+            this.renderCharacterSelection();
+            return;
+        }
+        
         // Render current level (includes background clearing)
         this.levelManager.render(this.ctx, this.spriteRenderer);
 
@@ -283,6 +289,10 @@ export class GameEngine {
 
         // Render debug info
         this.renderDebugInfo();
+    }
+    
+    renderCharacterSelection() {
+        this.characterManager.renderCharacterSelection(this.ctx, this.selectedCharacter);
     }
 
     setupInputHandlers() {
