@@ -20,10 +20,8 @@ export class Level1 extends Level {
         // Load Level 1 specific assets
         console.log('Loading Level 1 assets...');
         
-        // Create enemy sprites if not already created
-        if (this.gameEngine && this.gameEngine.spriteManager) {
-            this.createEnemySprites();
-        }
+        // Enemy sprites will be created by the sprite manager in GameEngine
+        // No need to create them here as they're handled globally
     }
     
     createEnemySprites() {

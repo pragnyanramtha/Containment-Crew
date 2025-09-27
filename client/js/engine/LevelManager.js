@@ -64,45 +64,22 @@ export class LevelManager {
             ]
         });
         
-        // Level 2: Boss Fight and First Sacrifice
-        this.levelConfigs.set(2, {
-            type: 'boss_sacrifice',
-            name: 'Level 2 - The First Sacrifice',
-            backgroundColor: '#2a1a1a',
-            objectives: ['defeat_boss', 'sacrifice_one_player'],
-            enemies: [
-                { type: 'mutant_boss', count: 1 }
-            ],
-            sacrificeType: 'elevator_button'
-                }
-            ],
-            tutorialMarkers: [
-                { x: 100, y: 100, instruction: "Use WASD to move" },
-                { x: 1800, y: 100, instruction: "Move here to continue" },
-                { x: 1800, y: 900, instruction: "Good! Now move here" },
-                { x: 100, y: 900, instruction: "Excellent! Talk to Dr. Petrov" }
-            ]
-        });
-        
-        // Level 1: Combat Introduction
-        this.levelConfigs.set(1, {
-            type: 'combat_intro',
-            name: 'Level 1 - First Contact',
-            backgroundColor: '#1a1a1a',
-            objectives: ['defeat_all_enemies'],
-            enemies: [
-                { type: 'weak_zombie', count: 5, spawnArea: { x: 1400, y: 200, width: 400, height: 600 } }
-            ]
-        });
+        // Add tutorial markers to Level 0
+        this.levelConfigs.get(0).tutorialMarkers = [
+            { x: 100, y: 100, instruction: "Use WASD to move" },
+            { x: 1800, y: 100, instruction: "Move here to continue" },
+            { x: 1800, y: 900, instruction: "Good! Now move here" },
+            { x: 100, y: 900, instruction: "Excellent! Talk to Dr. Petrov" }
+        ];
         
         // Level 2: Boss Fight and First Sacrifice
         this.levelConfigs.set(2, {
             type: 'boss_sacrifice',
             name: 'Level 2 - The First Choice',
-            backgroundColor: '#1a1a1a',
+            backgroundColor: '#2a1a1a',
             objectives: ['defeat_boss', 'sacrifice_one_player'],
             enemies: [
-                { type: 'mutant_boss', count: 1, x: 960, y: 300 }
+                { type: 'mutant_boss', count: 1 }
             ],
             levelObjects: [
                 { type: 'elevator', x: 100, y: 400, width: 100, height: 200 },
