@@ -518,17 +518,22 @@ export class Enemy {
         ctx.font = '12px monospace';
         ctx.fillText(`${this.health} / ${this.maxHealth}`, ctx.canvas.width / 2, barY + barHeight + 15);
         
-        // Phase indicator
-        if (this.bossPhase) {
-            let phaseText = '';
-            switch (this.bossPhase) {
-                case 1: phaseText = 'NORMAL'; break;
-                case 2: phaseText = 'AGGRESSIVE'; break;
-                case 3: phaseText = 'ENRAGED'; break;
+        // Target and status indicator
+        if (this.selectedTarget) {
+            let statusText = '';
+            let statusColor = '#ffff00';
+            
+            if (this.isInactive) {
+                statusText = 'INACTIVE - TARGET ELIMINATED';
+                statusColor = '#666666';
+            } else if (this.selectedTarget.isAlive) {
+                statusText = `TARGETING: ${this.selectedTarget.id.toUpperCase()}`;
+                statusColor = '#ff6666';
             }
-            ctx.fillStyle = '#ffff00';
+            
+            ctx.fillStyle = statusColor;
             ctx.font = 'bold 10px monospace';
-            ctx.fillText(`PHASE: ${phaseText}`, ctx.canvas.width / 2, barY + barHeight + 28);
+            ctx.fillText(statusText, ctx.canvas.width / 2, barY + barHeight + 28);
         }
         
         ctx.textAlign = 'left';
