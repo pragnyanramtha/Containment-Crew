@@ -305,6 +305,40 @@ export class Level {
         ctx.globalAlpha = alpha;
         
         switch (effect.type) {
+            case 'swing':
+                // Swing attack arc effect
+                ctx.strokeStyle = '#ffff44';
+                ctx.lineWidth = 8;
+                
+                // Calculate swing direction
+                let startAngle, endAngle;
+                switch (effect.direction) {
+                    case 'right':
+                        startAngle = -effect.angle / 2;
+                        endAngle = effect.angle / 2;
+                        break;
+                    case 'down':
+                        startAngle = Math.PI / 2 - effect.angle / 2;
+                        endAngle = Math.PI / 2 + effect.angle / 2;
+                        break;
+                    case 'left':
+                        startAngle = Math.PI - effect.angle / 2;
+                        endAngle = Math.PI + effect.angle / 2;
+                        break;
+                    case 'up':
+                        startAngle = -Math.PI / 2 - effect.angle / 2;
+                        endAngle = -Math.PI / 2 + effect.angle / 2;
+                        break;
+                    default:
+                        startAngle = -effect.angle / 2;
+                        endAngle = effect.angle / 2;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, effect.range * (1 - alpha * 0.5), startAngle, endAngle);
+                ctx.stroke();
+                break;
+                
             case 'damage':
                 // Red impact effect
                 ctx.fillStyle = '#ff4444';

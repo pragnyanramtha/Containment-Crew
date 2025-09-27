@@ -6,6 +6,7 @@ import { TutorialManager } from './TutorialManager.js';
 import { CombatSystem } from './CombatSystem.js';
 import { EnemyManager } from './Enemy.js';
 import { DeathManager } from './DeathManager.js';
+import { CharacterManager } from './CharacterManager.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
