@@ -113,6 +113,21 @@ export class GameEngine {
         if (this.tutorialManager) {
             this.tutorialManager.destroy();
         }
+        
+        // Clean up combat system
+        if (this.combatSystem) {
+            // Combat system doesn't need explicit cleanup
+        }
+        
+        // Clean up enemy manager
+        if (this.enemyManager) {
+            this.enemyManager.clearAllEnemies();
+        }
+        
+        // Clean up death manager
+        if (this.deathManager) {
+            this.deathManager.reset();
+        }
 
         // Remove event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
