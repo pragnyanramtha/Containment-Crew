@@ -37,7 +37,7 @@ export class CombatSystem {
         });
     }
     
-    // Player attack system
+    // Player attack system with swing mechanics
     tryPlayerAttack(playerId, targetX, targetY) {
         const player = this.gameEngine.getPlayer(playerId);
         if (!player || !player.isAlive) return false;
@@ -47,32 +47,80 @@ export class CombatSystem {
             return false;
         }
         
-        // Calculate attack position based on player direction
-        const attackPos = this.getAttackPosition(player);
+        // Set cooldown
+        this.attackCooldowns.set(playerId, this.config.playerAttackCooldown);
         
-        // Check if target is in range
-        const distance = this.getDistance(attackPos.x, attackPos.y, targetX, targetY);
+        // Calculate damage based on player strength (1 strength = 25 HP = 1 heart)
+        const damage = player.strength * 25;
+        
+        // Perform swing attack
+        const hitEnemies = this.performSwingAttack(player, damage);
+        
+        // Create attack visual effect
+        this.createSwingEffect(player);
+        
+        console.log(`Player ${playerId} attacked with ${damage} damage, hit ${hitEnemies} enemies`);
+        return true;
+    }
+    
+    // Swing attack that hits enemies in an arc
+    performSwingAttack(player, damage) {
+        const currentLevel = this.gameEngine.getCurrentLevel();
+        if (!currentLevel) return 0;
+        
+        const enemyManager = this.gameEngine.getEnemyManager();
+        if (!enemyManager) return 0;
+        
+        const enemies = enemyManager.getAllEnemies();
+        let hitCount = 0;
+        
+        for (const enemy of enemies) {
+            if (!enemy.isAlive) continue;
+            
+            if (this.isInSwingRange(player, enemy)) {
+                this.damageEnemy(enemy, damage, player.x, player.y);
+                hitCount++;
+            }
+        }
+        
+        return hitCount;
+    }
+    
+    // Check if enemy is within swing attack range
+    isInSwingRange(player, enemy) {
+        const playerCenterX = player.x + player.width / 2;
+        const playerCenterY = player.y + player.height / 2;
+        const enemyCenterX = enemy.x + enemy.width / 2;
+        const enemyCenterY = enemy.y + enemy.height / 2;
+        
+        // Check distance first
+        const distance = this.getDistance(playerCenterX, playerCenterY, enemyCenterX, enemyCenterY);
         if (distance > this.config.playerAttackRange) {
             return false;
         }
         
-        // Set cooldown
-        this.attackCooldowns.set(playerId, this.config.playerAttackCooldown);
+        // Calculate angle to enemy
+        const angleToEnemy = Math.atan2(enemyCenterY - playerCenterY, enemyCenterX - playerCenterX);
         
-        // Find enemies in attack range
-        const currentLevel = this.gameEngine.getCurrentLevel();
-        if (currentLevel && currentLevel.enemies) {
-            for (const enemy of currentLevel.enemies) {
-                if (enemy.isAlive && this.isInAttackRange(attackPos, enemy, this.config.playerAttackRange)) {
-                    this.damageEnemy(enemy, this.config.playerAttackDamage, attackPos.x, attackPos.y);
-                }
-            }
+        // Get player facing direction angle
+        let playerAngle;
+        switch (player.direction) {
+            case 'right': playerAngle = 0; break;
+            case 'down': playerAngle = Math.PI / 2; break;
+            case 'left': playerAngle = Math.PI; break;
+            case 'up': playerAngle = -Math.PI / 2; break;
+            default: playerAngle = 0;
         }
         
-        // Create attack visual effect
-        this.createAttackEffect(attackPos.x, attackPos.y, player.direction);
+        // Calculate angle difference
+        let angleDiff = angleToEnemy - playerAngle;
         
-        return true;
+        // Normalize angle difference to [-π, π]
+        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+        
+        // Check if enemy is within swing arc
+        return Math.abs(angleDiff) <= this.config.swingAngle / 2;
     }
     
     // Enemy attack system
@@ -145,14 +193,17 @@ export class CombatSystem {
         });
     }
     
-    createAttackEffect(x, y, direction) {
-        // Create a simple attack effect (could be enhanced with particles)
+    createSwingEffect(player) {
+        // Create swing attack visual effect
         const effect = {
-            x: x,
-            y: y,
-            direction: direction,
-            timeLeft: 0.2,
-            maxTime: 0.2
+            type: 'swing',
+            x: player.x + player.width / 2,
+            y: player.y + player.height / 2,
+            direction: player.direction,
+            timeLeft: 0.3,
+            maxTime: 0.3,
+            range: this.config.playerAttackRange,
+            angle: this.config.swingAngle
         };
         
         // Add to current level's effects if available
