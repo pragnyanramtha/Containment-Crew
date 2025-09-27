@@ -1,3 +1,5 @@
 .kiro/
 .vscode/
 .gitigore
+server/node_modules/
+server/.env
