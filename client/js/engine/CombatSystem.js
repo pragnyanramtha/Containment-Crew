@@ -130,15 +130,17 @@ export class CombatSystem {
         // Check cooldown
         if (enemy.attackCooldown > 0) return false;
         
-        // Check range
+        // Check range (boss has longer range)
+        const attackRange = enemy.type === 'mutant_boss' ? 60 : this.config.enemyAttackRange;
         const distance = this.getDistance(enemy.x, enemy.y, targetPlayer.x, targetPlayer.y);
-        if (distance > this.config.enemyAttackRange) return false;
+        if (distance > attackRange) return false;
         
         // Set cooldown
         enemy.attackCooldown = this.config.enemyAttackCooldown;
         
-        // Deal damage
-        this.damagePlayer(targetPlayer, this.config.enemyAttackDamage, enemy.x, enemy.y);
+        // Deal damage (boss does more damage)
+        const damage = enemy.type === 'mutant_boss' ? enemy.attackDamage : this.config.enemyAttackDamage;
+        this.damagePlayer(targetPlayer, damage, enemy.x, enemy.y);
         
         // Create attack visual effect
         this.createAttackEffect(enemy.x, enemy.y, this.getDirectionToTarget(enemy, targetPlayer));
