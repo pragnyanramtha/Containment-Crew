@@ -147,13 +147,8 @@ export class Level1 extends Level {
         ctx.fillText('SPACE - Attack', 10, ctx.canvas.height - 60);
         ctx.fillText('WASD - Move', 10, ctx.canvas.height - 40);
         
-        // Show enemy count
-        if (this.gameEngine && this.gameEngine.getEnemyManager()) {
-            const aliveEnemies = this.gameEngine.getEnemyManager().getAliveEnemies().length;
-            ctx.fillStyle = '#ff8888';
-            ctx.font = 'bold 16px monospace';
-            ctx.fillText(`Enemies Remaining: ${aliveEnemies}`, ctx.canvas.width - 250, 30);
-        }
+        // Show enemy count - this will be handled by the GameEngine's debug info
+        // We don't have direct access to gameEngine from render method
     }
     
     renderCompletionMessage(ctx) {
