@@ -124,6 +124,23 @@ export class GameEngine {
         this.ctx.font = '12px monospace';
     }
     
+    initializeSprites() {
+        // Create directional sprites for different player colors
+        const playerColors = [
+            { body: '#00ff00', indicator: '#ffffff', border: '#004400' }, // Green
+            { body: '#0088ff', indicator: '#ffffff', border: '#004488' }, // Blue  
+            { body: '#ff8800', indicator: '#ffffff', border: '#884400' }  // Orange
+        ];
+        
+        playerColors.forEach((colors, index) => {
+            const playerName = `player_${index + 1}`;
+            this.spriteManager.createDirectionalSprites(playerName, 32, 32, colors);
+        });
+        
+        // Create test player sprite
+        this.spriteManager.createDirectionalSprites('player_test-player', 32, 32, playerColors[0]);
+    }
+    
     createTestPlayer() {
         // Create a test player for development
         const testPlayer = new Player('test-player', 100, 100, '#00ff00');
