@@ -1,5 +1,6 @@
 import { Level } from './Level.js';
 import { Level0 } from '../levels/Level0.js';
+import { Level1 } from '../levels/Level1.js';
 
 /**
  * LevelManager handles level loading, transitions, and progression
@@ -188,6 +189,8 @@ export class LevelManager {
         switch (levelNumber) {
             case 0:
                 return new Level0(levelNumber, config);
+            case 1:
+                return new Level1(levelNumber, config);
             default:
                 return new Level(levelNumber, config);
         }
