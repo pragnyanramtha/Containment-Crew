@@ -160,9 +160,12 @@ export class LevelManager {
      * Create level instance based on type
      */
     createLevelInstance(levelNumber, config) {
-        // For now, return base Level class
-        // In the future, we can create specific level classes
-        return new Level(levelNumber, config);
+        switch (levelNumber) {
+            case 0:
+                return new Level0(levelNumber, config);
+            default:
+                return new Level(levelNumber, config);
+        }
     }
     
     /**
