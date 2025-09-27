@@ -206,8 +206,28 @@ export class Player {
         this.health -= amount;
         if (this.health <= 0) {
             this.health = 0;
-            this.isAlive = false;
+            this.die();
         }
+    }
+    
+    die() {
+        if (!this.isAlive) return;
+        
+        this.isAlive = false;
+        this.deathTime = Date.now();
+        
+        // Stop all movement
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.isMoving = false;
+        
+        console.log(`Player ${this.id} has died permanently - no respawn!`);
+    }
+    
+    revive() {
+        // This method exists but should NOT be used in this game
+        // Players who die stay dead permanently
+        console.warn(`Attempted to revive player ${this.id} - this should not happen in Sacrifices Must Be Made!`);
     }
     
     heal(amount) {
