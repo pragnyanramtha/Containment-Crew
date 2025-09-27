@@ -96,6 +96,11 @@ export class GameEngine {
         if (this.dialogueSystem) {
             this.dialogueSystem.destroy();
         }
+        
+        // Clean up tutorial system
+        if (this.tutorialManager) {
+            this.tutorialManager.destroy();
+        }
 
         // Remove event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
