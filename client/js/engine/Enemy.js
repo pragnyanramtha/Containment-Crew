@@ -37,10 +37,11 @@ export class Enemy {
             case 'weak_zombie':
                 this.width = 28;
                 this.height = 28;
-                this.health = 50;
-                this.maxHealth = 50;
+                this.hearts = 1; // 1 heart
+                this.health = this.hearts * 25; // 25 HP per heart
+                this.maxHealth = this.health;
                 this.speed = 80; // pixels per second
-                this.attackDamage = 15;
+                this.attackDamage = 25; // 1 heart of damage
                 this.detectionRange = 150;
                 this.color = '#44aa44';
                 this.spriteBaseName = 'zombie_weak';
@@ -49,10 +50,11 @@ export class Enemy {
             case 'zombie':
                 this.width = 32;
                 this.height = 32;
-                this.health = 75;
-                this.maxHealth = 75;
+                this.hearts = 2; // 2 hearts
+                this.health = this.hearts * 25; // 50 HP
+                this.maxHealth = this.health;
                 this.speed = 100;
-                this.attackDamage = 20;
+                this.attackDamage = 25; // 1 heart of damage
                 this.detectionRange = 180;
                 this.color = '#66aa66';
                 this.spriteBaseName = 'zombie_normal';
@@ -61,10 +63,11 @@ export class Enemy {
             case 'mutant_boss':
                 this.width = 48;
                 this.height = 48;
-                this.health = 200;
-                this.maxHealth = 200;
+                this.hearts = 8; // 8 hearts (boss)
+                this.health = this.hearts * 25; // 200 HP
+                this.maxHealth = this.health;
                 this.speed = 60;
-                this.attackDamage = 35;
+                this.attackDamage = 50; // 2 hearts of damage
                 this.detectionRange = 250;
                 this.color = '#aa4444';
                 this.spriteBaseName = 'mutant_boss';
@@ -74,10 +77,11 @@ export class Enemy {
                 // Default zombie
                 this.width = 32;
                 this.height = 32;
-                this.health = 75;
-                this.maxHealth = 75;
+                this.hearts = 2; // 2 hearts
+                this.health = this.hearts * 25; // 50 HP
+                this.maxHealth = this.health;
                 this.speed = 100;
-                this.attackDamage = 20;
+                this.attackDamage = 25; // 1 heart of damage
                 this.detectionRange = 180;
                 this.color = '#66aa66';
                 this.spriteBaseName = 'zombie_normal';
