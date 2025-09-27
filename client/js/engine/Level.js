@@ -483,6 +483,69 @@ export class Level {
                 ctx.fillText('☢', effect.x, effect.y + 4);
                 break;
                 
+            case 'reactor_shutdown':
+                // Reactor shutdown effect
+                effect.pulseTimer += 1/60; // Assuming 60 FPS
+                const pulseIntensity = Math.sin(effect.pulseTimer * 8) * 0.5 + 0.5;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha * pulseIntensity;
+                
+                // Energy rings
+                for (let i = 0; i < 3; i++) {
+                    const ringRadius = 50 + (i * 30) + (effect.pulseTimer * 20) % 90;
+                    ctx.strokeStyle = i === 0 ? '#00ffff' : i === 1 ? '#0088ff' : '#0044ff';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, ringRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                // Central energy core
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 10 + pulseIntensity * 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                break;
+                
+            case 'reactor_completion':
+                // Reactor shutdown completion effect
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                
+                // Central explosion
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 40 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Energy burst
+                ctx.fillStyle = '#00ffff';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 80 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Render particles
+                for (const particle of effect.particles) {
+                    const particleAlpha = particle.life / particle.maxLife;
+                    ctx.globalAlpha = alpha * particleAlpha;
+                    
+                    ctx.fillStyle = '#ffff00';
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Update particle
+                    particle.x += particle.vx * (1/60); // Assuming 60 FPS
+                    particle.y += particle.vy * (1/60);
+                    particle.life -= 1/60;
+                }
+                
+                ctx.restore();
+                break;
+                
             default:
                 // Default attack effect
                 ctx.fillStyle = '#ffff44';
@@ -701,6 +764,59 @@ export class Level {
      * Override in subclasses
      */
     onDestroy() {
+        // Base implementation - override in subclasses
+    }
+    
+    /**
+     * Get objectives for HUD display
+     */
+    getObjectives() {
+        const objectives = [];
+        for (const [objective, completed] of this.objectives) {
+            objectives.push({
+                description: this.getObjectiveDescription(objective),
+                completed: completed
+            });
+        }
+        return objectives;
+    }
+    
+    /**
+     * Get human-readable description for an objective
+     * Override in subclasses for custom descriptions
+     */
+    getObjectiveDescription(objective) {
+        switch (objective) {
+            case 'defeat_all_enemies':
+                return 'Defeat all enemies';
+            case 'survive':
+                return 'Keep at least one player alive';
+            case 'learn_movement':
+                return 'Learn basic movement controls';
+            case 'hear_story':
+                return 'Listen to the story introduction';
+            case 'defeat_boss':
+                return 'Defeat the boss enemy';
+            case 'sacrifice_one_player':
+                return 'One player must sacrifice themselves';
+            case 'solve_puzzle':
+                return 'Solve the cooperative puzzle';
+            case 'reach_reactor':
+                return 'Reach the reactor controls';
+            case 'shutdown_reactor':
+                return 'Shut down the nuclear reactor';
+            case 'ending_sequence':
+                return 'Complete the ending sequence';
+            default:
+                return objective.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    }
+    
+    /**
+     * Handle input for level-specific interactions
+     * Override in subclasses
+     */
+    handleInput(keys) {
         // Base implementation - override in subclasses
     }
 }
