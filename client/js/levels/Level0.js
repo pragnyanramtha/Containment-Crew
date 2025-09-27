@@ -212,6 +212,32 @@ export class Level0 extends Level {
     }
     
     /**
+     * Get tutorial completion percentage
+     */
+    getTutorialProgress() {
+        const totalSteps = 2; // movement + story
+        let completedSteps = 0;
+        
+        if (this.playersCompletedMovement.size >= 3) completedSteps++;
+        if (this.hasHeardStory) completedSteps++;
+        
+        return (completedSteps / totalSteps) * 100;
+    }
+    
+    /**
+     * Get detailed tutorial status
+     */
+    getTutorialStatus() {
+        return {
+            state: this.tutorialState,
+            movementCompleted: this.playersCompletedMovement.size,
+            movementRequired: 3,
+            storyHeard: this.hasHeardStory,
+            overallProgress: this.getTutorialProgress()
+        };
+    }
+    
+    /**
      * Render level-specific content
      */
     renderLevel(ctx, spriteRenderer) {
