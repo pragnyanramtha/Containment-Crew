@@ -209,11 +209,7 @@ export class Level1 extends Level {
     onLevelCompleted() {
         console.log('Level 1 completed! Players have learned combat.');
         
-        // Transition to Level 2 after a delay
-        setTimeout(() => {
-            if (this.gameEngine && this.gameEngine.levelManager) {
-                this.gameEngine.levelManager.changeLevel(2);
-            }
-        }, 3000);
+        // Level completion will be handled by LevelManager automatically
+        // No need to manually transition here
     }
 }
