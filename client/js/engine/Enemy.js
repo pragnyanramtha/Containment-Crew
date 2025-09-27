@@ -154,13 +154,62 @@ export class Enemy {
         
         const distanceToTarget = this.getDistanceToTarget();
         
-        // Boss has special attack patterns
-        if (distanceToTarget <= 60 && this.attackCooldown <= 0) {
-            // Special boss attack (could be area attack)
+        // Initialize boss-specific properties if not set
+        if (!this.bossPhase) {
+            this.bossPhase = 1;
+            this.specialAttackCooldown = 0;
+            this.chargeAttackCooldown = 0;
+            this.areaAttackCooldown = 0;
+            this.lastSpecialAttack = 0;
+            this.isCharging = false;
+            this.chargeTarget = null;
+            this.chargeSpeed = 200;
+            this.originalSpeed = this.speed;
+        }
+        
+        // Update boss phase based on health
+        const healthPercent = this.health / this.maxHealth;
+        if (healthPercent <= 0.3 && this.bossPhase < 3) {
+            this.bossPhase = 3; // Enraged phase
+            this.speed = this.originalSpeed * 1.3;
+        } else if (healthPercent <= 0.6 && this.bossPhase < 2) {
+            this.bossPhase = 2; // Aggressive phase
+            this.speed = this.originalSpeed * 1.1;
+        }
+        
+        // Update special attack cooldowns
+        if (this.specialAttackCooldown > 0) {
+            this.specialAttackCooldown -= deltaTime;
+        }
+        if (this.chargeAttackCooldown > 0) {
+            this.chargeAttackCooldown -= deltaTime;
+        }
+        if (this.areaAttackCooldown > 0) {
+            this.areaAttackCooldown -= deltaTime;
+        }
+        
+        // Handle charging attack
+        if (this.isCharging) {
+            this.handleChargeAttack(deltaTime, players, level);
             return;
         }
         
-        // Move towards target (slower but more aggressive)
+        // Choose attack pattern based on distance and phase
+        if (distanceToTarget <= 80) {
+            // Close range - try special attacks
+            if (this.bossPhase >= 2 && this.areaAttackCooldown <= 0 && Math.random() < 0.3) {
+                this.performAreaAttack(players);
+            } else if (this.attackCooldown <= 0) {
+                // Regular melee attack
+                return;
+            }
+        } else if (distanceToTarget <= 200 && this.chargeAttackCooldown <= 0 && this.bossPhase >= 2) {
+            // Medium range - charge attack
+            this.initiateChargeAttack();
+            return;
+        }
+        
+        // Default movement towards target
         this.moveTowardsTarget(deltaTime, level);
     }
     
