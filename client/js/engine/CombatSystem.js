@@ -82,6 +82,11 @@ export class CombatSystem {
         // Set cooldown
         this.attackCooldowns.set(playerId, this.config.playerAttackCooldown);
         
+        // Play attack sound effect
+        if (this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('player_attack', 0.8);
+        }
+        
         // Calculate damage based on player strength (1 strength = 25 HP = 1 heart)
         const damage = player.strength * 25;
         
@@ -90,6 +95,11 @@ export class CombatSystem {
         
         // Create attack visual effect
         this.createSwingEffect(player);
+        
+        // Create visual effects for successful hits
+        if (hitEnemies > 0) {
+            this.gameEngine.visualEffectsManager.addScreenShake(3, 0.2);
+        }
         
         console.log(`Player ${playerId} attacked with ${damage} damage, hit ${hitEnemies} enemies`);
         return true;
@@ -177,6 +187,15 @@ export class CombatSystem {
         const cooldown = enemy.type === 'mutant_boss' ? 1.5 : this.config.enemyAttackCooldown;
         enemy.attackCooldown = cooldown;
         
+        // Play enemy attack sound
+        if (this.gameEngine.getAudioManager()) {
+            if (enemy.type === 'mutant_boss') {
+                this.gameEngine.getAudioManager().playSFX('boss_roar', 0.9);
+            } else {
+                this.gameEngine.getAudioManager().playSFX('enemy_hurt', 0.6); // Reuse for attack sound
+            }
+        }
+        
         // Deal damage (boss does more damage)
         const damage = enemy.type === 'mutant_boss' ? enemy.attackDamage : this.config.enemyAttackDamage;
         this.damagePlayer(targetPlayer, damage, enemy.x, enemy.y);
@@ -198,11 +217,25 @@ export class CombatSystem {
         
         player.takeDamage(damage);
         
+        // Play player hurt sound effect
+        if (this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('player_hurt', 0.8);
+        }
+        
         // Create damage number
         this.createDamageNumber(player.x + player.width / 2, player.y, damage, '#ff4444');
         
         // Create damage effect
         this.createDamageEffect(player.x + player.width / 2, player.y + player.height / 2);
+        
+        // Use visual effects manager for enhanced effects
+        if (this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.createCombatHit(
+                player.x + player.width / 2, 
+                player.y + player.height / 2, 
+                damage
+            );
+        }
         
         // Check if player died
         if (!player.isAlive) {
@@ -215,11 +248,25 @@ export class CombatSystem {
         
         enemy.takeDamage(damage);
         
+        // Play hit sound effect
+        if (this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('hit_impact', 0.7);
+        }
+        
         // Create damage number
         this.createDamageNumber(enemy.x + enemy.width / 2, enemy.y, damage, '#ffff44');
         
         // Create damage effect
         this.createDamageEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+        
+        // Use visual effects manager for enhanced effects
+        if (this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.createCombatHit(
+                enemy.x + enemy.width / 2, 
+                enemy.y + enemy.height / 2, 
+                damage
+            );
+        }
         
         // Check if enemy died
         if (!enemy.isAlive) {
@@ -298,6 +345,16 @@ export class CombatSystem {
     onPlayerDeath(player) {
         console.log(`Player ${player.id} has died!`);
         
+        // Play player death sound effect
+        if (this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('player_death', 1.0);
+        }
+        
+        // Create death visual effects
+        if (this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.createPlayerDeath(player);
+        }
+        
         // Check if all players are dead
         const alivePlayers = Array.from(this.gameEngine.players.values()).filter(p => p.isAlive);
         if (alivePlayers.length === 0) {
@@ -307,6 +364,32 @@ export class CombatSystem {
     
     onEnemyDeath(enemy) {
         console.log(`Enemy ${enemy.id} has been defeated!`);
+        
+        // Play death sound effect
+        if (this.gameEngine.getAudioManager()) {
+            if (enemy.type === 'mutant_boss') {
+                this.gameEngine.getAudioManager().playSFX('boss_roar', 1.0, 0.8); // Lower pitch for death
+            } else {
+                this.gameEngine.getAudioManager().playSFX('enemy_death', 0.8);
+            }
+        }
+        
+        // Create death visual effects
+        if (this.gameEngine.visualEffectsManager) {
+            if (enemy.type === 'mutant_boss') {
+                this.gameEngine.visualEffectsManager.createExplosion(
+                    enemy.x + enemy.width / 2, 
+                    enemy.y + enemy.height / 2, 
+                    'large'
+                );
+            } else {
+                this.gameEngine.visualEffectsManager.createExplosion(
+                    enemy.x + enemy.width / 2, 
+                    enemy.y + enemy.height / 2, 
+                    'normal'
+                );
+            }
+        }
         
         // Special handling for boss death
         if (enemy.type === 'mutant_boss') {
