@@ -34,6 +34,9 @@ export class GameEngine {
         
         // Dialogue system
         this.dialogueSystem = new DialogueSystem(this);
+        
+        // Tutorial system
+        this.tutorialManager = new TutorialManager(this);
 
         // Bind methods
         this.gameLoop = this.gameLoop.bind(this);
@@ -139,6 +142,9 @@ export class GameEngine {
         
         // Update dialogue system
         this.dialogueSystem.update(deltaTime, Array.from(this.players.values()));
+        
+        // Update tutorial system
+        this.tutorialManager.update(deltaTime, Array.from(this.players.values()));
     }
 
     render() {
