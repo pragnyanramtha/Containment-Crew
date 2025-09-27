@@ -269,12 +269,15 @@ export class Level {
             }
         });
         
-        // Render enemies
-        this.enemies.forEach(enemy => {
-            if (enemy.render) {
-                enemy.render(ctx, spriteRenderer);
-            }
-        });
+        // Render enemies (handled by enemy manager now)
+        // this.enemies.forEach(enemy => {
+        //     if (enemy.render) {
+        //         enemy.render(ctx, spriteRenderer);
+        //     }
+        // });
+        
+        // Render visual effects
+        this.renderEffects(ctx);
         
         // Render level-specific content
         this.renderLevel(ctx, spriteRenderer);
