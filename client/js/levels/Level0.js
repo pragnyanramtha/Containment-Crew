@@ -168,9 +168,9 @@ export class Level0 extends Level {
     /**
      * Check story progress
      */
-    checkStoryProgress() {
+    checkStoryProgress(gameEngine) {
         // Check if dialogue system indicates story was heard
-        const dialogueSystem = this.gameEngine.gameEngine?.dialogueSystem;
+        const dialogueSystem = gameEngine?.dialogueSystem;
         if (dialogueSystem && this.storyNPC && this.storyNPC.hasSpokenTo) {
             if (!dialogueSystem.isDialogueActive() && this.storyNPC.isDialogueFinished()) {
                 this.hasHeardStory = true;
