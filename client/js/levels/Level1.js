@@ -45,10 +45,10 @@ export class Level1 extends Level {
         }
         
         // Check if all enemies are defeated
-        if (this.combatStarted && gameEngine.getEnemyManager()) {
+        if (this.combatStarted && gameEngine && gameEngine.getEnemyManager()) {
             const aliveEnemies = gameEngine.getEnemyManager().getAliveEnemies();
             if (aliveEnemies.length === 0 && this.enemiesSpawned) {
-                this.onAllEnemiesDefeated();
+                this.onAllEnemiesDefeated(gameEngine);
             }
         }
     }
@@ -64,14 +64,16 @@ export class Level1 extends Level {
         // We just need to mark that combat has started
     }
     
-    onAllEnemiesDefeated() {
+    onAllEnemiesDefeated(gameEngine) {
         console.log('All enemies defeated in Level 1!');
         this.completeObjective('defeat_all_enemies');
         
         // Check if any players are still alive
-        const alivePlayers = Array.from(this.gameEngine.players.values()).filter(p => p.isAlive);
-        if (alivePlayers.length > 0) {
-            this.completeObjective('survive');
+        if (gameEngine && gameEngine.players) {
+            const alivePlayers = Array.from(gameEngine.players.values()).filter(p => p.isAlive);
+            if (alivePlayers.length > 0) {
+                this.completeObjective('survive');
+            }
         }
     }
     
