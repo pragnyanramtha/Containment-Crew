@@ -62,6 +62,14 @@ export class GameEngine {
         this.isRunning = true;
         this.lastTime = performance.now();
         requestAnimationFrame(this.gameLoop);
+        
+        // Start with Level 0 (Tutorial)
+        this.startGame();
+    }
+    
+    async startGame() {
+        console.log('Starting game with Level 0...');
+        await this.levelManager.changeLevel(0);
     }
 
     stop() {
