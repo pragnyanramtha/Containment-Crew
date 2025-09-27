@@ -201,6 +201,30 @@ export class LevelManager {
         this.transitionType = transitionType;
         this.transitionProgress = 0;
         
+        // Use visual effects manager for smooth transitions
+        if (this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.startLevelTransition(
+                this.currentLevelNumber, 
+                levelNumber, 
+                transitionType, 
+                () => {
+                    // This callback is called at the midpoint of the transition
+                    this.performLevelSwitch(levelNumber);
+                }
+            );
+        } else {
+            // Fallback to immediate level switch
+            await this.performLevelSwitch(levelNumber);
+        }
+        
+        console.log(`Successfully changed to level ${levelNumber}`);
+        return true;
+    }
+    
+    /**
+     * Perform the actual level switch (called during transition)
+     */
+    async performLevelSwitch(levelNumber) {
         // Deactivate current level
         if (this.currentLevel) {
             this.currentLevel.deactivate();
@@ -218,15 +242,17 @@ export class LevelManager {
         // Get new level
         const newLevel = this.levels.get(levelNumber);
         
-        // Perform transition
-        await this.performTransition();
-        
         // Set new current level
         this.currentLevel = newLevel;
         this.currentLevelNumber = levelNumber;
         
         // Activate new level
         this.currentLevel.activate();
+        
+        // Start level-specific music
+        if (this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playLevelMusic(levelNumber);
+        }
         
         // Spawn enemies for combat levels
         if (this.currentLevel.config.enemies && this.gameEngine.getEnemyManager()) {
@@ -236,7 +262,6 @@ export class LevelManager {
         // End transition
         this.isTransitioning = false;
         
-        console.log(`Successfully changed to level ${levelNumber}`);
         return true;
     }
     
@@ -273,6 +298,15 @@ export class LevelManager {
             if (this.currentLevel.isCompleted) {
                 this.handleLevelCompletion();
             }
+        }
+    }
+    
+    /**
+     * Handle input for current level
+     */
+    handleInput(keys) {
+        if (this.currentLevel && !this.isTransitioning) {
+            this.currentLevel.handleInput(keys);
         }
     }
     
