@@ -429,6 +429,9 @@ export class GameEngine {
 
         // Create test player sprite
         this.spriteManager.createDirectionalSprites('player_test-player', 32, 32, playerColors[0]);
+        
+        // Create enemy sprites
+        this.createEnemySprites();
     }
 
     createTestPlayer() {
