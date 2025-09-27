@@ -1,0 +1,18 @@
+{
+  "name": "sacrifices-game-server",
+  "version": "1.0.0",
+  "description": "Server for Sacrifices Must Be Made multiplayer game",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "keywords": ["game", "multiplayer", "websocket"],
+  "author": "",
+  "license": "MIT"
+}
