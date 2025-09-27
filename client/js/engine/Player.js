@@ -46,10 +46,27 @@ export class Player {
     }
     
     update(deltaTime, keys, canvasWidth, canvasHeight) {
+        this.updateCooldowns(deltaTime);
         this.handleInput(keys);
         this.updateMovement(deltaTime);
         this.checkBoundaries(canvasWidth, canvasHeight);
         this.updateAnimation(deltaTime);
+    }
+    
+    updateCooldowns(deltaTime) {
+        // Update dash cooldown
+        if (this.dashCooldown > 0) {
+            this.dashCooldown -= deltaTime;
+        }
+        
+        // Update dash duration
+        if (this.isDashing) {
+            this.dashTime -= deltaTime;
+            if (this.dashTime <= 0) {
+                this.isDashing = false;
+                this.speed = this.baseSpeed; // Reset to normal speed
+            }
+        }
     }
     
     handleInput(keys) {
