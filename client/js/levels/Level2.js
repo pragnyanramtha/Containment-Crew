@@ -515,6 +515,12 @@ export class Level2 extends Level {
         }
     }
     
+    spawnEnemies(gameEngine) {
+        // This will be called by LevelManager, but we handle boss spawning manually
+        // in the level flow, so we don't spawn enemies immediately
+        console.log('Level 2 enemy spawning handled by level flow');
+    }
+    
     onLevelCompleted() {
         console.log('Level 2 completed! First sacrifice has been made.');
         
