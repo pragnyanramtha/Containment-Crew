@@ -347,6 +347,78 @@ export class Level {
                 ctx.fill();
                 break;
                 
+            case 'boss_area_attack':
+                // Boss area attack warning and damage effect
+                const elapsed = effect.maxTime - effect.timeLeft;
+                const isWarning = elapsed < effect.warningTime;
+                
+                if (isWarning) {
+                    // Warning phase - red circle growing
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([10, 10]);
+                    
+                    const warningProgress = elapsed / effect.warningTime;
+                    const radius = effect.radius * warningProgress;
+                    
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Warning text
+                    ctx.fillStyle = '#ff0000';
+                    ctx.font = 'bold 16px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('DANGER!', effect.x, effect.y - effect.radius - 20);
+                } else {
+                    // Damage phase - explosion effect
+                    ctx.fillStyle = '#ff4444';
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Add some particles
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (Math.PI * 2 * i) / 8;
+                        const distance = effect.radius * 0.8;
+                        const particleX = effect.x + Math.cos(angle) * distance;
+                        const particleY = effect.y + Math.sin(angle) * distance;
+                        
+                        ctx.fillStyle = '#ffaa00';
+                        ctx.beginPath();
+                        ctx.arc(particleX, particleY, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                ctx.setLineDash([]); // Reset line dash
+                ctx.textAlign = 'left';
+                break;
+                
+            case 'boss_death':
+                // Boss death explosion effect
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 50 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Render particles
+                for (const particle of effect.particles) {
+                    const particleAlpha = particle.life / particle.maxLife;
+                    ctx.globalAlpha = alpha * particleAlpha;
+                    
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Update particle
+                    particle.x += particle.vx * (1/60); // Assuming 60 FPS
+                    particle.y += particle.vy * (1/60);
+                    particle.life -= 1/60;
+                }
+                break;
+                
             case 'attack':
                 // Enemy attack effect (red)
                 ctx.fillStyle = '#ff6666';
