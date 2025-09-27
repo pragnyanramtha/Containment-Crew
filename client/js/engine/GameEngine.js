@@ -257,6 +257,15 @@ export class GameEngine {
         if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].includes(event.code)) {
             event.preventDefault();
         }
+        
+        // Handle attack input immediately for responsiveness
+        if (event.code === 'Space' && !this.deathManager.isGameOver()) {
+            const localPlayer = this.getLocalPlayer();
+            if (localPlayer && localPlayer.isAlive) {
+                const attackPos = this.combatSystem.getAttackPosition(localPlayer);
+                this.combatSystem.tryPlayerAttack(localPlayer.id, attackPos.x, attackPos.y);
+            }
+        }
     }
 
     handleKeyUp(event) {
