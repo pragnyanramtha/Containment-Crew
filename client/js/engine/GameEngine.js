@@ -215,8 +215,10 @@ export class GameEngine {
         // Update combat system
         this.combatSystem.update(deltaTime);
 
-        // Handle combat input
-        this.combatSystem.handleInput(this.keys);
+        // Handle combat input (only if playing)
+        if (this.gameState === 'playing') {
+            this.combatSystem.handleInput(this.keys);
+        }
 
         // Update enemy manager
         this.enemyManager.update(deltaTime, players, currentLevel);

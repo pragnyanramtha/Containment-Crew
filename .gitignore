@@ -3,4 +3,4 @@
 .gitigore
 server/node_modules/
 server/.env
-.auto-commit-hash
+.autocommit-hash
