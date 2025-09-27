@@ -363,6 +363,15 @@ export class Enemy {
         return Math.sqrt(dx * dx + dy * dy);
     }
     
+    getGameEngine() {
+        // This will be set by the EnemyManager when the enemy is spawned
+        return this.gameEngine;
+    }
+    
+    setGameEngine(gameEngine) {
+        this.gameEngine = gameEngine;
+    }
+    
     // Boss-specific attack methods
     performAreaAttack(players) {
         this.areaAttackCooldown = 4.0; // 4 second cooldown
