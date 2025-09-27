@@ -187,12 +187,7 @@ export class Player {
             this.renderSimple(ctx);
         }
         
-        // Draw health bar (only for alive players)
-        if (this.isAlive) {
-            this.renderHealthBar(ctx);
-        }
-        
-        // Draw player name/ID
+        // Draw player name/ID (simplified since HUD handles health bars)
         this.renderPlayerInfo(ctx);
     }
     
@@ -271,13 +266,13 @@ export class Player {
     }
     
     renderPlayerInfo(ctx) {
-        // Draw player ID above health bar
+        // Draw player ID above player
         ctx.fillStyle = this.isAlive ? '#ffffff' : '#ff6666';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
         
         const textX = this.x + this.width / 2;
-        const textY = this.y - 15;
+        const textY = this.y - 5;
         
         const displayText = this.isAlive ? this.id : `${this.id} (DEAD)`;
         ctx.fillText(displayText, textX, textY);
