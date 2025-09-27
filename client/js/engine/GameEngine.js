@@ -191,6 +191,11 @@ export class GameEngine {
     }
 
     update(deltaTime) {
+        // Don't update game logic during character selection
+        if (this.gameState === 'character_selection') {
+            return;
+        }
+        
         // Don't update if game is over
         if (this.deathManager.isGameOver()) {
             this.deathManager.update(deltaTime);
