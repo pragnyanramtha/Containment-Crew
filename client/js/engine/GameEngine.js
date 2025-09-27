@@ -149,35 +149,90 @@ export class GameEngine {
     }
 
     update(deltaTime) {
+        // Don't update if game is over
+        if (this.deathManager.isGameOver()) {
+            this.deathManager.update(deltaTime);
+            return;
+        }
+        
+        const players = Array.from(this.players.values());
+        const currentLevel = this.getCurrentLevel();
+        
         // Update all players
-        for (const player of this.players.values()) {
+        for (const player of players) {
             player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
         }
         
+        // Update combat system
+        this.combatSystem.update(deltaTime);
+        
+        // Handle combat input
+        this.combatSystem.handleInput(this.keys);
+        
+        // Update enemy manager
+        this.enemyManager.update(deltaTime, players, currentLevel);
+        
+        // Update combat between enemies and players
+        this.updateCombatInteractions(deltaTime);
+        
+        // Update death manager
+        this.deathManager.update(deltaTime);
+        
         // Update level manager
-        this.levelManager.update(deltaTime, Array.from(this.players.values()));
+        this.levelManager.update(deltaTime, players);
         
         // Update dialogue system
-        this.dialogueSystem.update(deltaTime, Array.from(this.players.values()));
+        this.dialogueSystem.update(deltaTime, players);
         
         // Update tutorial system
-        this.tutorialManager.update(deltaTime, Array.from(this.players.values()));
+        this.tutorialManager.update(deltaTime, players);
+    }
+    
+    updateCombatInteractions(deltaTime) {
+        const players = Array.from(this.players.values());
+        const enemies = this.enemyManager.getAllEnemies();
+        
+        // Check enemy attacks on players
+        for (const enemy of enemies) {
+            if (!enemy.isAlive) continue;
+            
+            for (const player of players) {
+                if (!player.isAlive) continue;
+                
+                // Try enemy attack
+                if (this.combatSystem.tryEnemyAttack(enemy, player)) {
+                    // Attack was successful
+                    if (!player.isAlive) {
+                        this.deathManager.onPlayerDeath(player);
+                    }
+                }
+            }
+        }
     }
 
     render() {
         // Render current level (includes background clearing)
         this.levelManager.render(this.ctx, this.spriteRenderer);
 
+        // Render enemies
+        this.enemyManager.render(this.ctx, this.spriteRenderer);
+
         // Render all players with sprite system
         for (const player of this.players.values()) {
             player.render(this.ctx, this.spriteRenderer);
         }
+
+        // Render combat effects
+        this.combatSystem.render(this.ctx);
 
         // Render tutorial system
         this.tutorialManager.render(this.ctx);
 
         // Render dialogue system (on top of everything)
         this.dialogueSystem.render(this.ctx);
+
+        // Render death manager (game over screen, death messages)
+        this.deathManager.render(this.ctx);
 
         // Render debug info
         this.renderDebugInfo();
