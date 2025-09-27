@@ -12,10 +12,24 @@ export class Player {
         this.maxHealth = 100;
         this.isAlive = true;
         
+        // Character attributes (will be set by CharacterManager)
+        this.characterType = 'scout'; // default
+        this.strength = 2; // 1-3 (damage per hit)
+        this.baseSpeed = 200; // base movement speed
+        this.characterAbilities = {};
+        
         // Movement properties
-        this.speed = 200; // pixels per second
+        this.speed = this.baseSpeed;
         this.velocityX = 0;
         this.velocityY = 0;
+        
+        // Dash mechanics
+        this.dashCooldown = 0;
+        this.dashCooldownMax = 3.0; // 3 seconds
+        this.dashDistance = 150;
+        this.dashDuration = 0.2; // 0.2 seconds
+        this.isDashing = false;
+        this.dashTime = 0;
         
         // Animation state
         this.direction = 'down'; // down, up, left, right
