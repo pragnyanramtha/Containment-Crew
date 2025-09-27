@@ -602,6 +602,6 @@ export class GameEngine {
 
         // Controls
         this.ctx.fillStyle = '#888888';
-        this.ctx.fillText('Controls: WASD to move, SPACE to attack, F for fullscreen', 10, this.canvas.height - 20);
+        this.ctx.fillText('Controls: WASD to move, SPACE to attack, SHIFT to dash, F for fullscreen', 10, this.canvas.height - 20);
     }
 }
