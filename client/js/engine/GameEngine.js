@@ -477,8 +477,13 @@ export class GameEngine {
         const fps = this.deltaTime > 0 ? Math.round(1 / this.deltaTime) : 0;
         this.ctx.fillText(`FPS: ${fps}`, 10, 20);
 
-        // Player count
-        this.ctx.fillText(`Players: ${this.players.size}`, 10, 35);
+        // Player count and status
+        const gameStats = this.deathManager.getGameStats();
+        this.ctx.fillText(`Players: ${gameStats.alivePlayers}/${gameStats.totalPlayers} alive`, 10, 35);
+        
+        // Enemy count
+        const aliveEnemies = this.enemyManager.getAliveEnemies().length;
+        this.ctx.fillText(`Enemies: ${aliveEnemies}`, 10, 140);
 
         // Level info
         const currentLevel = this.levelManager.getCurrentLevelNumber();
@@ -499,6 +504,6 @@ export class GameEngine {
 
         // Controls
         this.ctx.fillStyle = '#888888';
-        this.ctx.fillText('Controls: WASD to move, F for fullscreen', 10, this.canvas.height - 20);
+        this.ctx.fillText('Controls: WASD to move, SPACE to attack, F for fullscreen', 10, this.canvas.height - 20);
     }
 }
