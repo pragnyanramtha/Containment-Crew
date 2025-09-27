@@ -468,6 +468,21 @@ export class GameEngine {
     async changeLevel(levelNumber) {
         return await this.levelManager.changeLevel(levelNumber);
     }
+    
+    // Combat system access
+    getCombatSystem() {
+        return this.combatSystem;
+    }
+    
+    // Enemy management access
+    getEnemyManager() {
+        return this.enemyManager;
+    }
+    
+    // Death management access
+    getDeathManager() {
+        return this.deathManager;
+    }
 
     renderDebugInfo() {
         this.ctx.fillStyle = '#00ff00';
