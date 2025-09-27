@@ -521,10 +521,10 @@ export class GameEngine {
     createTestPlayer() {
         // Create a test player for development
         const testPlayer = new Player('test-player', 100, 100, '#00ff00');
-        
+
         // Apply default character stats (scout)
         this.characterManager.applyCharacterStats(testPlayer, 'scout');
-        
+
         this.players.set('test-player', testPlayer);
         this.localPlayerId = 'test-player';
     }
