@@ -144,6 +144,9 @@ export class GameEngine {
             player.render(this.ctx, this.spriteRenderer);
         }
 
+        // Render dialogue system (on top of everything)
+        this.dialogueSystem.render(this.ctx);
+
         // Render debug info
         this.renderDebugInfo();
     }
