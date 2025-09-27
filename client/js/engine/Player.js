@@ -83,24 +83,27 @@ export class Player {
             this.tryDash();
         }
         
+        // Calculate effective speed with multiplier
+        const effectiveSpeed = this.speed * this.speedMultiplier;
+        
         // WASD movement
         if (keys['KeyW'] || keys['ArrowUp']) {
-            this.velocityY = -this.speed;
+            this.velocityY = -effectiveSpeed;
             this.direction = 'up';
             this.isMoving = true;
         }
         if (keys['KeyS'] || keys['ArrowDown']) {
-            this.velocityY = this.speed;
+            this.velocityY = effectiveSpeed;
             this.direction = 'down';
             this.isMoving = true;
         }
         if (keys['KeyA'] || keys['ArrowLeft']) {
-            this.velocityX = -this.speed;
+            this.velocityX = -effectiveSpeed;
             this.direction = 'left';
             this.isMoving = true;
         }
         if (keys['KeyD'] || keys['ArrowRight']) {
-            this.velocityX = this.speed;
+            this.velocityX = effectiveSpeed;
             this.direction = 'right';
             this.isMoving = true;
         }
