@@ -16,6 +16,11 @@ export class Level {
         this.objects = [];
         this.npcs = [];
         this.enemies = [];
+        this.effects = []; // Visual effects for combat
+        
+        // Combat state
+        this.enemiesDefeated = false;
+        this.gameOver = false;
         
         // Level completion tracking
         this.objectives = new Map();
