@@ -277,56 +277,128 @@ export class Level0 extends Level {
     renderTutorialInstructions(ctx) {
         // Main tutorial instruction
         let instruction = '';
+        let subInstruction = '';
         
         switch (this.tutorialState) {
             case 'movement':
                 const remainingPlayers = 3 - this.playersCompletedMovement.size; // Assuming 3 players
-                instruction = `Movement Tutorial - ${remainingPlayers} player(s) remaining`;
+                instruction = `Movement Tutorial`;
+                subInstruction = `${remainingPlayers} player(s) need to complete the movement course`;
                 break;
                 
             case 'story':
-                instruction = 'Talk to Dr. Petrov to hear the story (Press E near him)';
+                instruction = 'Story Time';
+                subInstruction = 'Talk to Dr. Petrov to hear the story (Press E near him)';
                 break;
                 
             case 'completed':
-                instruction = 'Tutorial Complete! Advancing to Level 1...';
+                instruction = 'Tutorial Complete!';
+                subInstruction = 'Advancing to Level 1...';
                 break;
         }
         
         if (instruction) {
+            // Calculate box dimensions
+            const maxWidth = Math.max(
+                ctx.measureText(instruction).width,
+                ctx.measureText(subInstruction).width
+            );
+            const boxWidth = maxWidth + 60;
+            const boxHeight = 80;
+            const boxX = (ctx.canvas.width - boxWidth) / 2;
+            const boxY = 30;
+            
             // Draw instruction background
-            const textWidth = ctx.measureText(instruction).width + 40;
-            const textHeight = 50;
-            const textX = (ctx.canvas.width - textWidth) / 2;
-            const textY = 50;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
             
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.fillRect(textX, textY, textWidth, textHeight);
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
             
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(textX, textY, textWidth, textHeight);
-            
-            // Draw instruction text
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '20px monospace';
+            // Draw main instruction
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '24px monospace';
             ctx.textAlign = 'center';
             ctx.fillText(
                 instruction,
                 ctx.canvas.width / 2,
-                textY + 30
+                boxY + 30
             );
+            
+            // Draw sub instruction
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px monospace';
+            ctx.fillText(
+                subInstruction,
+                ctx.canvas.width / 2,
+                boxY + 55
+            );
+            
             ctx.textAlign = 'left';
         }
         
+        // Draw progress indicator
+        this.renderTutorialProgress(ctx);
+        
         // Draw controls reminder
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '16px monospace';
         ctx.fillText(
             'Controls: WASD to move, E to interact',
             20,
             ctx.canvas.height - 40
         );
+    }
+    
+    /**
+     * Render tutorial progress indicator
+     */
+    renderTutorialProgress(ctx) {
+        if (this.tutorialState !== 'movement') return;
+        
+        const progressX = 50;
+        const progressY = 150;
+        const progressWidth = 300;
+        const progressHeight = 20;
+        
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(progressX - 10, progressY - 10, progressWidth + 20, progressHeight + 40);
+        
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(progressX - 10, progressY - 10, progressWidth + 20, progressHeight + 40);
+        
+        // Progress label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px monospace';
+        ctx.fillText('Movement Progress:', progressX, progressY - 15);
+        
+        // Progress bar background
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(progressX, progressY, progressWidth, progressHeight);
+        
+        // Progress bar fill
+        const progress = this.playersCompletedMovement.size / 3; // Assuming 3 players
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(progressX, progressY, progressWidth * progress, progressHeight);
+        
+        // Progress bar border
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(progressX, progressY, progressWidth, progressHeight);
+        
+        // Progress text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            `${this.playersCompletedMovement.size}/3 Players`,
+            progressX + progressWidth / 2,
+            progressY + progressHeight / 2 + 4
+        );
+        ctx.textAlign = 'left';
     }
     
     /**
