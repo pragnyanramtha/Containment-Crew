@@ -213,6 +213,24 @@ export class CombatSystem {
         }
     }
     
+    createAttackEffect(x, y, direction) {
+        // Create a simple attack effect for enemy attacks
+        const effect = {
+            type: 'attack',
+            x: x,
+            y: y,
+            direction: direction,
+            timeLeft: 0.2,
+            maxTime: 0.2
+        };
+        
+        // Add to current level's effects if available
+        const currentLevel = this.gameEngine.getCurrentLevel();
+        if (currentLevel && currentLevel.effects) {
+            currentLevel.effects.push(effect);
+        }
+    }
+    
     createDamageEffect(x, y) {
         // Create impact effect
         const effect = {
