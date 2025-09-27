@@ -66,10 +66,10 @@ export class LevelManager {
         
         // Add tutorial markers to Level 0
         this.levelConfigs.get(0).tutorialMarkers = [
-            { x: 100, y: 100, instruction: "Use WASD to move" },
-            { x: 1800, y: 100, instruction: "Move here to continue" },
-            { x: 1800, y: 900, instruction: "Good! Now move here" },
-            { x: 100, y: 900, instruction: "Excellent! Talk to Dr. Petrov" }
+            { x: 200, y: 200, instruction: "Use WASD to move" },
+            { x: 1200, y: 200, instruction: "Move here to continue" },
+            { x: 1200, y: 600, instruction: "Good! Now move here" },
+            { x: 200, y: 600, instruction: "Excellent! Talk to Dr. Petrov" }
         ];
         
         // Level 2: Boss Fight and First Sacrifice
