@@ -347,6 +347,14 @@ export class Level {
                 ctx.fill();
                 break;
                 
+            case 'attack':
+                // Enemy attack effect (red)
+                ctx.fillStyle = '#ff6666';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 12 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                break;
+                
             default:
                 // Default attack effect
                 ctx.fillStyle = '#ffff44';
