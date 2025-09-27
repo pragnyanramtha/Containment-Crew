@@ -7,6 +7,7 @@ import { CombatSystem } from './CombatSystem.js';
 import { EnemyManager } from './Enemy.js';
 import { DeathManager } from './DeathManager.js';
 import { CharacterManager } from './CharacterManager.js';
+import { DeveloperSettings } from './DeveloperSettings.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
@@ -53,6 +54,9 @@ export class GameEngine {
 
         // Character management
         this.characterManager = new CharacterManager();
+
+        // Developer settings
+        this.developerSettings = new DeveloperSettings(this);
 
         // Game state
         this.gameState = 'character_selection'; // 'character_selection', 'playing'
