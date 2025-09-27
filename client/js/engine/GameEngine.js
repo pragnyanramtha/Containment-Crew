@@ -30,6 +30,9 @@ export class GameEngine {
         
         // Level management
         this.levelManager = new LevelManager(this);
+        
+        // Dialogue system
+        this.dialogueSystem = new DialogueSystem(this);
 
         // Bind methods
         this.gameLoop = this.gameLoop.bind(this);
@@ -127,6 +130,9 @@ export class GameEngine {
         
         // Update level manager
         this.levelManager.update(deltaTime, Array.from(this.players.values()));
+        
+        // Update dialogue system
+        this.dialogueSystem.update(deltaTime, Array.from(this.players.values()));
     }
 
     render() {
