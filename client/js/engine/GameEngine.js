@@ -156,6 +156,9 @@ export class GameEngine {
             player.render(this.ctx, this.spriteRenderer);
         }
 
+        // Render tutorial system
+        this.tutorialManager.render(this.ctx);
+
         // Render dialogue system (on top of everything)
         this.dialogueSystem.render(this.ctx);
 
