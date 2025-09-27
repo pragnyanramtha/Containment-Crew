@@ -26,6 +26,9 @@ export class GameEngine {
         // Sprite system
         this.spriteManager = new SpriteManager();
         this.spriteRenderer = new SpriteRenderer(this.ctx, this.spriteManager);
+        
+        // Level management
+        this.levelManager = new LevelManager(this);
 
         // Bind methods
         this.gameLoop = this.gameLoop.bind(this);
@@ -107,6 +110,9 @@ export class GameEngine {
         for (const player of this.players.values()) {
             player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
         }
+        
+        // Update level manager
+        this.levelManager.update(deltaTime, Array.from(this.players.values()));
     }
 
     render() {
