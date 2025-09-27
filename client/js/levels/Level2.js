@@ -341,14 +341,15 @@ export class Level2 extends Level {
         ctx.fillStyle = '#ff4444';
         ctx.font = 'bold 36px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('LEVEL 2: THE GUARDIAN', ctx.canvas.width / 2, ctx.canvas.height / 2 - 60);
+        ctx.fillText('LEVEL 2: THE GUARDIAN', ctx.canvas.width / 2, ctx.canvas.height / 2 - 80);
         
         // Instructions
         ctx.fillStyle = '#ffffff';
         ctx.font = '20px monospace';
-        ctx.fillText('A massive mutant blocks your path', ctx.canvas.width / 2, ctx.canvas.height / 2 - 10);
-        ctx.fillText('Defeat it to proceed, but beware...', ctx.canvas.width / 2, ctx.canvas.height / 2 + 20);
-        ctx.fillText('Not everyone will make it out alive', ctx.canvas.width / 2, ctx.canvas.height / 2 + 50);
+        ctx.fillText('A massive mutant blocks your path', ctx.canvas.width / 2, ctx.canvas.height / 2 - 30);
+        ctx.fillText('It moves slowly but will fixate on one victim', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        ctx.fillText('If its target dies, the beast will stop...', ctx.canvas.width / 2, ctx.canvas.height / 2 + 30);
+        ctx.fillText('Use this knowledge wisely', ctx.canvas.width / 2, ctx.canvas.height / 2 + 60);
         
         ctx.restore();
         ctx.textAlign = 'left';
