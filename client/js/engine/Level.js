@@ -287,6 +287,45 @@ export class Level {
     }
     
     /**
+     * Render visual effects
+     */
+    renderEffects(ctx) {
+        for (const effect of this.effects) {
+            this.renderEffect(ctx, effect);
+        }
+    }
+    
+    /**
+     * Render a single effect
+     */
+    renderEffect(ctx, effect) {
+        const alpha = effect.timeLeft / effect.maxTime;
+        
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        
+        switch (effect.type) {
+            case 'damage':
+                // Red impact effect
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 10 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                break;
+                
+            default:
+                // Default attack effect
+                ctx.fillStyle = '#ffff44';
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, 8 * (1 - alpha), 0, Math.PI * 2);
+                ctx.fill();
+                break;
+        }
+        
+        ctx.restore();
+    }
+    
+    /**
      * Render level background
      * Override in subclasses
      */
