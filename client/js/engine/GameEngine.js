@@ -50,6 +50,13 @@ export class GameEngine {
         
         // Death management
         this.deathManager = new DeathManager(this);
+        
+        // Character management
+        this.characterManager = new CharacterManager();
+        
+        // Game state
+        this.gameState = 'character_selection'; // 'character_selection', 'playing'
+        this.selectedCharacter = null;
 
         // Bind methods
         this.gameLoop = this.gameLoop.bind(this);
