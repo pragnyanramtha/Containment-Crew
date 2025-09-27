@@ -123,11 +123,11 @@ export class LevelManager {
         // Level 5: Final Challenge and Ending
         this.levelConfigs.set(5, {
             type: 'final_challenge',
-            name: 'Level 5 - The Final Sacrifice',
-            backgroundColor: '#0a0a0a',
+            name: 'Level 5 - The Core',
+            backgroundColor: '#2a1a1a',
             objectives: ['reach_reactor', 'shutdown_reactor', 'ending_sequence'],
             levelObjects: [
-                { type: 'reactor_core', x: 860, y: 200, width: 200, height: 200 }
+                { type: 'reactor_controls', x: 1600, y: 400, width: 120, height: 80 }
             ],
             hazards: ['falling_rocks', 'radiation', 'blizzard']
         });
