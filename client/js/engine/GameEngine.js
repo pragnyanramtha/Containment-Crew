@@ -76,6 +76,25 @@ export class GameEngine {
         // Initial resize
         this.handleResize();
     }
+    
+    createEnemySprites() {
+        // Create zombie sprites
+        const zombieColors = {
+            body: '#44aa44',
+            indicator: '#ffffff',
+            border: '#224422'
+        };
+        
+        const bossColors = {
+            body: '#aa4444',
+            indicator: '#ffffff',
+            border: '#442222'
+        };
+        
+        this.spriteManager.createDirectionalSprites('zombie_weak', 28, 28, zombieColors);
+        this.spriteManager.createDirectionalSprites('zombie_normal', 32, 32, zombieColors);
+        this.spriteManager.createDirectionalSprites('mutant_boss', 48, 48, bossColors);
+    }
 
     start() {
         console.log('Starting game engine...');
