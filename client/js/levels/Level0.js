@@ -93,7 +93,7 @@ export class Level0 extends Level {
         
         // Check story completion
         if (this.tutorialState === 'story') {
-            this.checkStoryProgress();
+            this.checkStoryProgress(gameEngine);
         }
     }
     
