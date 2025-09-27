@@ -236,6 +236,11 @@ export class LevelManager {
         // Activate new level
         this.currentLevel.activate();
         
+        // Spawn enemies for combat levels
+        if (this.currentLevel.config.enemies && this.gameEngine.getEnemyManager()) {
+            this.currentLevel.spawnEnemies(this.gameEngine);
+        }
+        
         // End transition
         this.isTransitioning = false;
         
