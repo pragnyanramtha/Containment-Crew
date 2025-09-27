@@ -43,6 +43,10 @@ export class Player {
         
         // Collision bounds
         this.collisionPadding = 4; // Smaller collision box than sprite
+        
+        // Developer settings properties
+        this.isInvincible = false;
+        this.speedMultiplier = 1.0;
     }
     
     update(deltaTime, keys, canvasWidth, canvasHeight) {
