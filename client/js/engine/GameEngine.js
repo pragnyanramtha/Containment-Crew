@@ -241,6 +241,9 @@ export class GameEngine {
 
         // Update tutorial system
         this.tutorialManager.update(deltaTime, players);
+
+        // Update developer settings
+        this.developerSettings.update(deltaTime);
     }
 
     updateCombatInteractions(deltaTime) {
