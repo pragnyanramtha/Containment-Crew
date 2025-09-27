@@ -74,6 +74,11 @@ export class Player {
         this.velocityY = 0;
         this.isMoving = false;
         
+        // Handle dash input (Shift key)
+        if (keys['ShiftLeft'] || keys['ShiftRight']) {
+            this.tryDash();
+        }
+        
         // WASD movement
         if (keys['KeyW'] || keys['ArrowUp']) {
             this.velocityY = -this.speed;
@@ -102,6 +107,21 @@ export class Player {
             this.velocityX *= normalizer;
             this.velocityY *= normalizer;
         }
+    }
+    
+    tryDash() {
+        if (!this.isAlive || this.isDashing || this.dashCooldown > 0) return false;
+        
+        // Start dash
+        this.isDashing = true;
+        this.dashTime = this.dashDuration;
+        this.dashCooldown = this.dashCooldownMax;
+        
+        // Increase speed dramatically during dash
+        this.speed = this.baseSpeed * 4; // 4x speed during dash
+        
+        console.log(`Player ${this.id} dashed!`);
+        return true;
     }
     
     updateMovement(deltaTime) {
