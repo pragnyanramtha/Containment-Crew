@@ -264,6 +264,11 @@ export class CombatSystem {
     onEnemyDeath(enemy) {
         console.log(`Enemy ${enemy.id} has been defeated!`);
         
+        // Special handling for boss death
+        if (enemy.type === 'mutant_boss') {
+            this.onBossDefeated(enemy);
+        }
+        
         // Check if all enemies are dead
         const currentLevel = this.gameEngine.getCurrentLevel();
         if (currentLevel && currentLevel.enemies) {
@@ -271,6 +276,64 @@ export class CombatSystem {
             if (aliveEnemies.length === 0) {
                 this.onAllEnemiesDefeated();
             }
+        }
+    }
+    
+    onBossDefeated(boss) {
+        console.log('BOSS DEFEATED! The mutant boss has fallen!');
+        
+        // Create boss death effect
+        this.createBossDeathEffect(boss.x + boss.width / 2, boss.y + boss.height / 2);
+        
+        // Trigger boss defeat event in current level
+        const currentLevel = this.gameEngine.getCurrentLevel();
+        if (currentLevel && currentLevel.onBossDefeated) {
+            currentLevel.onBossDefeated();
+        }
+        
+        // Award experience or health to surviving players (optional reward)
+        const alivePlayers = Array.from(this.gameEngine.players.values()).filter(p => p.isAlive);
+        for (const player of alivePlayers) {
+            // Small health reward for defeating boss
+            const healAmount = 25; // 1 heart
+            const newHealth = Math.min(player.maxHealth, player.health + healAmount);
+            if (newHealth > player.health) {
+                player.health = newHealth;
+                this.createDamageNumber(player.x + player.width / 2, player.y, healAmount, '#00ff00');
+                console.log(`Player ${player.id} healed for ${healAmount} HP`);
+            }
+        }
+    }
+    
+    createBossDeathEffect(x, y) {
+        // Create dramatic boss death effect
+        const effect = {
+            type: 'boss_death',
+            x: x,
+            y: y,
+            timeLeft: 2.0,
+            maxTime: 2.0,
+            particles: []
+        };
+        
+        // Create explosion particles
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            const speed = 100 + Math.random() * 100;
+            effect.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0 + Math.random() * 1.0,
+                maxLife: 1.0 + Math.random() * 1.0
+            });
+        }
+        
+        // Add to current level's effects if available
+        const currentLevel = this.gameEngine.getCurrentLevel();
+        if (currentLevel && currentLevel.effects) {
+            currentLevel.effects.push(effect);
         }
     }
     
