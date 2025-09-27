@@ -8,6 +8,9 @@ import { EnemyManager } from './Enemy.js';
 import { DeathManager } from './DeathManager.js';
 import { CharacterManager } from './CharacterManager.js';
 import { DeveloperSettings } from './DeveloperSettings.js';
+import { HUDManager } from './HUDManager.js';
+import { VisualEffectsManager } from './VisualEffectsManager.js';
+import { AudioManager } from './AudioManager.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
@@ -58,6 +61,15 @@ export class GameEngine {
         // Developer settings
         this.developerSettings = new DeveloperSettings(this);
 
+        // HUD system
+        this.hudManager = new HUDManager(this);
+
+        // Visual effects system
+        this.visualEffectsManager = new VisualEffectsManager(this);
+
+        // Audio system
+        this.audioManager = new AudioManager();
+
         // Game state
         this.gameState = 'character_selection'; // 'character_selection', 'playing'
         this.selectedCharacter = null;
@@ -85,6 +97,9 @@ export class GameEngine {
         this.initializeSprites();
         this.createTestPlayer();
 
+        // Initialize audio system
+        this.initializeAudio();
+
         // Initial resize
         this.handleResize();
     }
@@ -108,6 +123,17 @@ export class GameEngine {
         this.spriteManager.createDirectionalSprites('mutant_boss', 48, 48, bossColors);
     }
 
+    async initializeAudio() {
+        console.log('Initializing audio system...');
+        try {
+            // Load audio assets (this will handle missing files gracefully)
+            await this.audioManager.loadAudioAssets();
+            console.log('Audio system initialized successfully');
+        } catch (error) {
+            console.warn('Audio system initialization failed, continuing without audio:', error);
+        }
+    }
+
     start() {
         console.log('Starting game engine...');
         this.isRunning = true;
@@ -123,6 +149,21 @@ export class GameEngine {
         console.log('Starting game with Level 0...');
         this.gameState = 'playing';
         await this.levelManager.changeLevel(0);
+    }
+    
+    async startMultiplayerGame(gameData) {
+        console.log('Starting multiplayer game with data:', gameData);
+        
+        // Clear existing players except keep test player for now
+        // In full multiplayer, we'd replace this with actual network players
+        
+        // Set up multiplayer state
+        this.gameState = 'playing';
+        
+        // Start with Level 0
+        await this.levelManager.changeLevel(0);
+        
+        console.log('Multiplayer game started successfully');
     }
 
     stop() {
@@ -160,6 +201,11 @@ export class GameEngine {
         // Clean up death manager
         if (this.deathManager) {
             this.deathManager.reset();
+        }
+
+        // Clean up audio system
+        if (this.audioManager) {
+            this.audioManager.destroy();
         }
 
         // Remove event listeners
@@ -213,7 +259,22 @@ export class GameEngine {
 
         // Update all players
         for (const player of players) {
+            const wasMoving = player.isMoving;
+            const wasDashing = player.isDashing;
             player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
+            
+            // Play sound effects for local player
+            if (player.id === this.localPlayerId && player.isAlive && this.audioManager) {
+                // Movement sound
+                if (player.isMoving && !wasMoving) {
+                    this.audioManager.playSFX('player_move', 0.3);
+                }
+                
+                // Dash sound
+                if (player.isDashing && !wasDashing) {
+                    this.audioManager.playSFX('player_dash', 0.7);
+                }
+            }
         }
 
         // Update combat system
@@ -235,6 +296,9 @@ export class GameEngine {
 
         // Update level manager
         this.levelManager.update(deltaTime, players);
+        
+        // Handle level input
+        this.levelManager.handleInput(this.keys);
 
         // Update dialogue system
         this.dialogueSystem.update(deltaTime, players);
@@ -244,6 +308,12 @@ export class GameEngine {
 
         // Update developer settings
         this.developerSettings.update(deltaTime);
+
+        // Update HUD system
+        this.hudManager.update(deltaTime);
+
+        // Update visual effects system
+        this.visualEffectsManager.update(deltaTime);
     }
 
     updateCombatInteractions(deltaTime) {
@@ -298,6 +368,12 @@ export class GameEngine {
         // Render death manager (game over screen, death messages)
         this.deathManager.render(this.ctx);
 
+        // Render visual effects (particles, screen shake, etc.)
+        this.visualEffectsManager.render();
+
+        // Render HUD system (on top of game elements)
+        this.hudManager.render();
+
         // Render debug info
         this.renderDebugInfo();
 
@@ -327,6 +403,20 @@ export class GameEngine {
         if (event.code === 'KeyF' || event.code === 'F11') {
             event.preventDefault();
             this.handleFullscreen();
+            return;
+        }
+
+        // Handle audio controls
+        if (event.code === 'KeyM') {
+            event.preventDefault();
+            this.audioManager.toggleMute();
+            return;
+        }
+
+        // Volume controls (number keys 1-9 for master volume)
+        if (event.code >= 'Digit1' && event.code <= 'Digit9' && this.gameState === 'playing') {
+            const volume = parseInt(event.code.slice(-1)) / 10;
+            this.audioManager.setMasterVolume(volume);
             return;
         }
 
@@ -585,6 +675,16 @@ export class GameEngine {
         return this.deathManager;
     }
 
+    // Visual effects management access
+    getVisualEffectsManager() {
+        return this.visualEffectsManager;
+    }
+
+    // Audio management access
+    getAudioManager() {
+        return this.audioManager;
+    }
+
     renderDebugInfo() {
         this.ctx.fillStyle = '#00ff00';
         this.ctx.font = '12px monospace';
@@ -618,8 +718,15 @@ export class GameEngine {
             this.ctx.fillText(`Moving: ${localPlayer.isMoving}`, 10, 125);
         }
 
+        // Audio info
+        if (this.audioManager) {
+            const volumeSettings = this.audioManager.getVolumeSettings();
+            this.ctx.fillText(`Audio: Master ${Math.round(volumeSettings.master * 100)}% | Music ${Math.round(volumeSettings.music * 100)}% | SFX ${Math.round(volumeSettings.sfx * 100)}%`, 10, 155);
+            this.ctx.fillText(`Muted: ${volumeSettings.isMuted}`, 10, 170);
+        }
+
         // Controls
         this.ctx.fillStyle = '#888888';
-        this.ctx.fillText('Controls: WASD to move, SPACE to attack, SHIFT to dash, F for fullscreen', 10, this.canvas.height - 20);
+        this.ctx.fillText('Controls: WASD to move, SPACE to attack, SHIFT to dash, F for fullscreen, M to mute, 1-9 for volume', 10, this.canvas.height - 20);
     }
 }
