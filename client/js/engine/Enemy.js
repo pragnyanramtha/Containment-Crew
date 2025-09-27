@@ -644,6 +644,7 @@ export class EnemyManager {
     
     spawnEnemy(type, x, y) {
         const enemy = new Enemy(`enemy_${this.nextEnemyId++}`, type, x, y);
+        enemy.setGameEngine(this.gameEngine);
         this.enemies.push(enemy);
         return enemy;
     }
