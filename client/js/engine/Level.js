@@ -207,18 +207,31 @@ export class Level {
             }
         });
         
-        // Update enemies
-        this.enemies.forEach(enemy => {
-            if (enemy.update) {
-                enemy.update(deltaTime, players, gameEngine);
-            }
-        });
+        // Update enemies (handled by enemy manager now)
+        // this.enemies.forEach(enemy => {
+        //     if (enemy.update) {
+        //         enemy.update(deltaTime, players, gameEngine);
+        //     }
+        // });
+        
+        // Update visual effects
+        this.updateEffects(deltaTime);
         
         // Check level completion
         this.checkCompletion(players, gameEngine);
         
         // Level-specific update logic
         this.updateLevel(deltaTime, players, gameEngine);
+    }
+    
+    /**
+     * Update visual effects
+     */
+    updateEffects(deltaTime) {
+        this.effects = this.effects.filter(effect => {
+            effect.timeLeft -= deltaTime;
+            return effect.timeLeft > 0;
+        });
     }
     
     /**
