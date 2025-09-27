@@ -66,18 +66,18 @@ export class GameEngine {
 
     destroy() {
         this.stop();
-        
+
         // Remove event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('keyup', this.handleKeyUp);
         window.removeEventListener('resize', this.handleResize);
         window.removeEventListener('orientationchange', this.handleResize);
-        
+
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         if (fullscreenBtn) {
             fullscreenBtn.removeEventListener('click', this.handleFullscreen);
         }
-        
+
         document.removeEventListener('fullscreenchange', this.handleResize);
         document.removeEventListener('webkitfullscreenchange', this.handleResize);
         document.removeEventListener('mozfullscreenchange', this.handleResize);
@@ -258,13 +258,13 @@ export class GameEngine {
     updateResolutionInfo() {
         const resolutionInfo = document.getElementById('resolutionInfo');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
-        
+
         if (resolutionInfo) {
             const displayWidth = Math.round(this.baseWidth * this.scaleFactor);
             const displayHeight = Math.round(this.baseHeight * this.scaleFactor);
             const isFullscreen = !!document.fullscreenElement;
-            
-            resolutionInfo.textContent = 
+
+            resolutionInfo.textContent =
                 `${displayWidth}x${displayHeight} | Scale: ${this.scaleFactor.toFixed(2)} | ${isFullscreen ? 'Fullscreen' : 'Windowed'}`;
         }
 
