@@ -119,6 +119,16 @@ export class Level {
     }
     
     /**
+     * Spawn enemies using the game engine's enemy manager
+     */
+    spawnEnemies(gameEngine) {
+        if (gameEngine && gameEngine.getEnemyManager()) {
+            const enemyManager = gameEngine.getEnemyManager();
+            enemyManager.spawnEnemiesFromConfig(this.config, this.bounds.width, this.bounds.height);
+        }
+    }
+    
+    /**
      * Create level object from config
      * Override in subclasses for specific object types
      */
