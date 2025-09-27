@@ -49,6 +49,31 @@ export class LevelManager {
                         "Now go! Learn to work together. Your journey begins here."
                     ]
                 }
+            ]
+        });
+        
+        // Level 1: Combat Introduction
+        this.levelConfigs.set(1, {
+            type: 'combat_intro',
+            name: 'Level 1 - First Contact',
+            backgroundColor: '#1a1a2a',
+            objectives: ['defeat_all_enemies', 'survive'],
+            enemies: [
+                { type: 'weak_zombie', count: 5 }
+            ]
+        });
+        
+        // Level 2: Boss Fight and First Sacrifice
+        this.levelConfigs.set(2, {
+            type: 'boss_sacrifice',
+            name: 'Level 2 - The First Sacrifice',
+            backgroundColor: '#2a1a1a',
+            objectives: ['defeat_boss', 'sacrifice_one_player'],
+            enemies: [
+                { type: 'mutant_boss', count: 1 }
+            ],
+            sacrificeType: 'elevator_button'
+                }
             ],
             tutorialMarkers: [
                 { x: 100, y: 100, instruction: "Use WASD to move" },
