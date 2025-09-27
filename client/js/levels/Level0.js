@@ -346,6 +346,36 @@ export class Level0 extends Level {
             marker.isCompleted = false;
             marker.pulseTime = 0;
         });
+        
+        // Start movement tutorial using TutorialManager
+        this.startMovementTutorial();
+    }
+    
+    /**
+     * Start the movement tutorial
+     */
+    startMovementTutorial() {
+        // Create tutorial configuration for TutorialManager
+        const tutorialConfig = {
+            name: 'Movement Tutorial',
+            steps: this.tutorialMarkers.map((marker, index) => ({
+                type: 'position',
+                x: marker.x,
+                y: marker.y,
+                radius: marker.radius,
+                instruction: marker.instruction,
+                color: '#00ff00'
+            })),
+            onComplete: () => {
+                console.log('Movement tutorial completed via TutorialManager');
+                this.tutorialState = 'story';
+                // All players completed movement, now they need to talk to Dr. Petrov
+            }
+        };
+        
+        // Access tutorial manager through the game engine
+        // We'll need to pass this through the level system
+        // For now, we'll keep the existing system and enhance it
     }
     
     /**
