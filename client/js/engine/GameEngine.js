@@ -110,12 +110,14 @@ export class GameEngine {
         this.lastTime = performance.now();
         requestAnimationFrame(this.gameLoop);
         
-        // Start with Level 0 (Tutorial)
-        this.startGame();
+        // Start with character selection
+        this.gameState = 'character_selection';
+        console.log('Please select your character...');
     }
     
     async startGame() {
         console.log('Starting game with Level 0...');
+        this.gameState = 'playing';
         await this.levelManager.changeLevel(0);
     }
 
