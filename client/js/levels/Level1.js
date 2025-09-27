@@ -24,19 +24,7 @@ export class Level1 extends Level {
         // No need to create them here as they're handled globally
     }
     
-    createEnemySprites() {
-        const spriteManager = this.gameEngine.spriteManager;
-        
-        // Create zombie sprites
-        const zombieColors = {
-            body: '#44aa44',
-            indicator: '#ffffff',
-            border: '#224422'
-        };
-        
-        spriteManager.createDirectionalSprites('zombie_weak', 28, 28, zombieColors);
-        spriteManager.createDirectionalSprites('zombie_normal', 32, 32, zombieColors);
-    }
+
     
     onActivate() {
         console.log('Level 1 activated - Combat Introduction');
