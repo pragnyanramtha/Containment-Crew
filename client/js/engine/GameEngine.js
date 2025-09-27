@@ -334,6 +334,19 @@ export class GameEngine {
     getLocalPlayer() {
         return this.players.get(this.localPlayerId);
     }
+    
+    // Level management methods
+    getCurrentLevel() {
+        return this.levelManager.getCurrentLevel();
+    }
+    
+    getCurrentLevelNumber() {
+        return this.levelManager.getCurrentLevelNumber();
+    }
+    
+    async changeLevel(levelNumber) {
+        return await this.levelManager.changeLevel(levelNumber);
+    }
 
     renderDebugInfo() {
         this.ctx.fillStyle = '#00ff00';
@@ -346,16 +359,21 @@ export class GameEngine {
         // Player count
         this.ctx.fillText(`Players: ${this.players.size}`, 10, 35);
 
+        // Level info
+        const currentLevel = this.levelManager.getCurrentLevelNumber();
+        const levelConfig = this.levelManager.getLevelConfig(currentLevel);
+        this.ctx.fillText(`Level: ${currentLevel} - ${levelConfig ? levelConfig.name : 'Unknown'}`, 10, 50);
+
         // Resolution info
-        this.ctx.fillText(`Resolution: ${this.canvas.width}x${this.canvas.height}`, 10, 50);
-        this.ctx.fillText(`Scale: ${this.scaleFactor.toFixed(2)}x`, 10, 65);
+        this.ctx.fillText(`Resolution: ${this.canvas.width}x${this.canvas.height}`, 10, 65);
+        this.ctx.fillText(`Scale: ${this.scaleFactor.toFixed(2)}x`, 10, 80);
 
         // Local player position
         const localPlayer = this.getLocalPlayer();
         if (localPlayer) {
-            this.ctx.fillText(`Pos: ${Math.round(localPlayer.x)}, ${Math.round(localPlayer.y)}`, 10, 80);
-            this.ctx.fillText(`Dir: ${localPlayer.direction}`, 10, 95);
-            this.ctx.fillText(`Moving: ${localPlayer.isMoving}`, 10, 110);
+            this.ctx.fillText(`Pos: ${Math.round(localPlayer.x)}, ${Math.round(localPlayer.y)}`, 10, 95);
+            this.ctx.fillText(`Dir: ${localPlayer.direction}`, 10, 110);
+            this.ctx.fillText(`Moving: ${localPlayer.isMoving}`, 10, 125);
         }
 
         // Controls
