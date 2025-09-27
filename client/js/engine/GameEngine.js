@@ -3,6 +3,9 @@ import { SpriteManager, SpriteRenderer } from './SpriteManager.js';
 import { LevelManager } from './LevelManager.js';
 import { DialogueSystem } from './DialogueSystem.js';
 import { TutorialManager } from './TutorialManager.js';
+import { CombatSystem } from './CombatSystem.js';
+import { EnemyManager } from './Enemy.js';
+import { DeathManager } from './DeathManager.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
@@ -37,6 +40,15 @@ export class GameEngine {
         
         // Tutorial system
         this.tutorialManager = new TutorialManager(this);
+        
+        // Combat system
+        this.combatSystem = new CombatSystem(this);
+        
+        // Enemy management
+        this.enemyManager = new EnemyManager(this);
+        
+        // Death management
+        this.deathManager = new DeathManager(this);
 
         // Bind methods
         this.gameLoop = this.gameLoop.bind(this);
