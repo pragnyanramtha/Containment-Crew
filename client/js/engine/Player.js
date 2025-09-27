@@ -309,6 +309,9 @@ export class Player {
     takeDamage(amount) {
         if (!this.isAlive) return;
         
+        // Check for invincibility (developer setting)
+        if (this.isInvincible) return;
+        
         this.health -= amount;
         if (this.health <= 0) {
             this.health = 0;
