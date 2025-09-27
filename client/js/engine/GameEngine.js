@@ -1,5 +1,6 @@
 import { Player } from './Player.js';
 import { SpriteManager, SpriteRenderer } from './SpriteManager.js';
+import { LevelManager } from './LevelManager.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
