@@ -159,6 +159,12 @@ export class CombatSystem {
     tryEnemyAttack(enemy, targetPlayer) {
         if (!enemy.isAlive || !targetPlayer.isAlive) return false;
         
+        // Boss-specific behavior: don't attack if inactive or targeting wrong player
+        if (enemy.type === 'mutant_boss') {
+            if (enemy.isInactive) return false;
+            if (enemy.selectedTarget && enemy.selectedTarget !== targetPlayer) return false;
+        }
+        
         // Check cooldown
         if (enemy.attackCooldown > 0) return false;
         
@@ -167,8 +173,9 @@ export class CombatSystem {
         const distance = this.getDistance(enemy.x, enemy.y, targetPlayer.x, targetPlayer.y);
         if (distance > attackRange) return false;
         
-        // Set cooldown
-        enemy.attackCooldown = this.config.enemyAttackCooldown;
+        // Set cooldown (boss attacks slower)
+        const cooldown = enemy.type === 'mutant_boss' ? 1.5 : this.config.enemyAttackCooldown;
+        enemy.attackCooldown = cooldown;
         
         // Deal damage (boss does more damage)
         const damage = enemy.type === 'mutant_boss' ? enemy.attackDamage : this.config.enemyAttackDamage;
@@ -176,6 +183,11 @@ export class CombatSystem {
         
         // Create attack visual effect
         this.createAttackEffect(enemy.x, enemy.y, this.getDirectionToTarget(enemy, targetPlayer));
+        
+        // Log boss attack
+        if (enemy.type === 'mutant_boss') {
+            console.log(`Boss attacked ${targetPlayer.id} for ${damage} damage`);
+        }
         
         return true;
     }
