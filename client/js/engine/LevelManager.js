@@ -169,6 +169,8 @@ export class LevelManager {
                 return new Level0(levelNumber, config);
             case 1:
                 return new Level1(levelNumber, config);
+            case 2:
+                return new Level2(levelNumber, config);
             default:
                 return new Level(levelNumber, config);
         }
