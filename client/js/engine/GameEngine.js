@@ -64,6 +64,26 @@ export class GameEngine {
         this.isRunning = false;
     }
 
+    destroy() {
+        this.stop();
+        
+        // Remove event listeners
+        document.removeEventListener('keydown', this.handleKeyDown);
+        document.removeEventListener('keyup', this.handleKeyUp);
+        window.removeEventListener('resize', this.handleResize);
+        window.removeEventListener('orientationchange', this.handleResize);
+        
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.removeEventListener('click', this.handleFullscreen);
+        }
+        
+        document.removeEventListener('fullscreenchange', this.handleResize);
+        document.removeEventListener('webkitfullscreenchange', this.handleResize);
+        document.removeEventListener('mozfullscreenchange', this.handleResize);
+        document.removeEventListener('MSFullscreenChange', this.handleResize);
+    }
+
     gameLoop(currentTime) {
         if (!this.isRunning) return;
 
@@ -109,6 +129,13 @@ export class GameEngine {
 
     handleKeyDown(event) {
         this.keys[event.code] = true;
+
+        // Handle fullscreen toggle
+        if (event.code === 'KeyF' || event.code === 'F11') {
+            event.preventDefault();
+            this.handleFullscreen();
+            return;
+        }
 
         // Prevent default browser behavior for game keys
         if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].includes(event.code)) {
@@ -172,6 +199,14 @@ export class GameEngine {
         const scaleY = viewportHeight / this.baseHeight;
         this.scaleFactor = Math.min(scaleX, scaleY);
 
+        // For pixel art, we want integer scaling when possible for maximum sharpness
+        // But allow fractional scaling for better fit on smaller screens
+        if (this.scaleFactor >= 1) {
+            // Use integer scaling for upscaling to maintain pixel perfect rendering
+            this.scaleFactor = Math.floor(this.scaleFactor);
+            if (this.scaleFactor < 1) this.scaleFactor = 1;
+        }
+
         // Calculate actual display size
         const displayWidth = this.baseWidth * this.scaleFactor;
         const displayHeight = this.baseHeight * this.scaleFactor;
@@ -180,7 +215,7 @@ export class GameEngine {
         this.canvas.style.width = `${displayWidth}px`;
         this.canvas.style.height = `${displayHeight}px`;
 
-        // Keep internal resolution high for crisp rendering
+        // Keep internal resolution consistent for crisp rendering
         this.canvas.width = this.baseWidth;
         this.canvas.height = this.baseHeight;
 
@@ -222,6 +257,8 @@ export class GameEngine {
 
     updateResolutionInfo() {
         const resolutionInfo = document.getElementById('resolutionInfo');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
         if (resolutionInfo) {
             const displayWidth = Math.round(this.baseWidth * this.scaleFactor);
             const displayHeight = Math.round(this.baseHeight * this.scaleFactor);
@@ -229,6 +266,11 @@ export class GameEngine {
             
             resolutionInfo.textContent = 
                 `${displayWidth}x${displayHeight} | Scale: ${this.scaleFactor.toFixed(2)} | ${isFullscreen ? 'Fullscreen' : 'Windowed'}`;
+        }
+
+        if (fullscreenBtn) {
+            const isFullscreen = !!document.fullscreenElement;
+            fullscreenBtn.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
         }
     }
 
@@ -299,6 +341,6 @@ export class GameEngine {
 
         // Controls
         this.ctx.fillStyle = '#888888';
-        this.ctx.fillText('Controls: WASD to move, Click Fullscreen button', 10, this.canvas.height - 20);
+        this.ctx.fillText('Controls: WASD to move, F for fullscreen', 10, this.canvas.height - 20);
     }
 }
