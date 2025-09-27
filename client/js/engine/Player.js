@@ -214,14 +214,15 @@ export class Player {
     
     renderPlayerInfo(ctx) {
         // Draw player ID above health bar
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = this.isAlive ? '#ffffff' : '#ff6666';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
         
         const textX = this.x + this.width / 2;
         const textY = this.y - 15;
         
-        ctx.fillText(this.id, textX, textY);
+        const displayText = this.isAlive ? this.id : `${this.id} (DEAD)`;
+        ctx.fillText(displayText, textX, textY);
         
         // Reset text alignment
         ctx.textAlign = 'left';
