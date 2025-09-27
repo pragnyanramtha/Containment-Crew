@@ -513,7 +513,13 @@ export class Enemy {
     }
     
     renderHealthBar(ctx) {
-        if (this.health >= this.maxHealth) return; // Don't show full health bars
+        if (this.health >= this.maxHealth && this.type !== 'mutant_boss') return; // Don't show full health bars except for boss
+        
+        // Boss gets a special large health bar
+        if (this.type === 'mutant_boss') {
+            this.renderBossHealthBar(ctx);
+            return;
+        }
         
         const barWidth = this.width;
         const barHeight = 3;
@@ -533,6 +539,68 @@ export class Enemy {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1;
         ctx.strokeRect(barX, barY, barWidth, barHeight);
+    }
+    
+    renderBossHealthBar(ctx) {
+        // Large boss health bar at top of screen
+        const barWidth = 400;
+        const barHeight = 20;
+        const barX = (ctx.canvas.width - barWidth) / 2;
+        const barY = 20;
+        
+        // Background
+        ctx.fillStyle = '#330000';
+        ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+        
+        // Health background
+        ctx.fillStyle = '#660000';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Health
+        const healthPercent = this.health / this.maxHealth;
+        let healthColor = '#ff0000';
+        
+        // Change color based on health
+        if (healthPercent > 0.6) {
+            healthColor = '#ff4444';
+        } else if (healthPercent > 0.3) {
+            healthColor = '#ff8800';
+        } else {
+            healthColor = '#ff0000';
+        }
+        
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+        
+        // Border
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+        
+        // Boss name and health text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('MUTANT BOSS', ctx.canvas.width / 2, barY - 8);
+        
+        // Health numbers
+        ctx.font = '12px monospace';
+        ctx.fillText(`${this.health} / ${this.maxHealth}`, ctx.canvas.width / 2, barY + barHeight + 15);
+        
+        // Phase indicator
+        if (this.bossPhase) {
+            let phaseText = '';
+            switch (this.bossPhase) {
+                case 1: phaseText = 'NORMAL'; break;
+                case 2: phaseText = 'AGGRESSIVE'; break;
+                case 3: phaseText = 'ENRAGED'; break;
+            }
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 10px monospace';
+            ctx.fillText(`PHASE: ${phaseText}`, ctx.canvas.width / 2, barY + barHeight + 28);
+        }
+        
+        ctx.textAlign = 'left';
     }
 }
 
