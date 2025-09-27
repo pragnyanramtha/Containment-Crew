@@ -76,15 +76,15 @@ export class LevelManager {
         // Level 2: Boss Fight and First Sacrifice
         this.levelConfigs.set(2, {
             type: 'boss_sacrifice',
-            name: 'Level 2 - The First Choice',
+            name: 'Level 2 - The Guardian',
             backgroundColor: '#2a1a1a',
             objectives: ['defeat_boss', 'sacrifice_one_player'],
             enemies: [
                 { type: 'mutant_boss', count: 1 }
             ],
             levelObjects: [
-                { type: 'elevator', x: 100, y: 400, width: 100, height: 200 },
-                { type: 'sacrifice_button', x: 1720, y: 500, width: 100, height: 80 }
+                { type: 'elevator', x: 700, y: 300, width: 80, height: 100 },
+                { type: 'sacrifice_button', x: 50, y: 350, width: 40, height: 40 }
             ],
             sacrificeType: 'elevator_button'
         });
