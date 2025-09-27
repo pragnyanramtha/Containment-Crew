@@ -288,6 +288,12 @@ export class GameEngine {
     handleKeyDown(event) {
         this.keys[event.code] = true;
 
+        // Handle character selection
+        if (this.gameState === 'character_selection') {
+            this.handleCharacterSelection(event);
+            return;
+        }
+
         // Handle fullscreen toggle
         if (event.code === 'KeyF' || event.code === 'F11') {
             event.preventDefault();
@@ -296,18 +302,50 @@ export class GameEngine {
         }
 
         // Prevent default browser behavior for game keys
-        if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].includes(event.code)) {
+        if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft', 'ShiftRight'].includes(event.code)) {
             event.preventDefault();
         }
         
         // Handle attack input immediately for responsiveness
-        if (event.code === 'Space' && !this.deathManager.isGameOver()) {
+        if (event.code === 'Space' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
             const localPlayer = this.getLocalPlayer();
             if (localPlayer && localPlayer.isAlive) {
-                const attackPos = this.combatSystem.getAttackPosition(localPlayer);
-                this.combatSystem.tryPlayerAttack(localPlayer.id, attackPos.x, attackPos.y);
+                this.combatSystem.tryPlayerAttack(localPlayer.id, 0, 0); // Position not needed for swing attacks
             }
         }
+    }
+    
+    handleCharacterSelection(event) {
+        const characters = Object.keys(this.characterManager.getAllCharacterTypes());
+        
+        // Number keys 1-5 for character selection
+        if (event.code >= 'Digit1' && event.code <= 'Digit5') {
+            const index = parseInt(event.code.slice(-1)) - 1;
+            if (index < characters.length) {
+                this.selectedCharacter = characters[index];
+                console.log(`Selected character: ${this.selectedCharacter}`);
+            }
+        }
+        
+        // Enter to confirm selection
+        if (event.code === 'Enter' && this.selectedCharacter) {
+            this.confirmCharacterSelection();
+        }
+    }
+    
+    confirmCharacterSelection() {
+        console.log(`Confirming character selection: ${this.selectedCharacter}`);
+        
+        // Apply character to test player
+        const testPlayer = this.getLocalPlayer();
+        if (testPlayer) {
+            this.characterManager.applyCharacterStats(testPlayer, this.selectedCharacter);
+            this.characterManager.selectCharacter(testPlayer.id, this.selectedCharacter);
+        }
+        
+        // Start the game
+        this.gameState = 'playing';
+        this.startGame();
     }
 
     handleKeyUp(event) {
