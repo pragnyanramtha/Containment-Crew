@@ -363,6 +363,89 @@ export class Enemy {
         return Math.sqrt(dx * dx + dy * dy);
     }
     
+    // Boss-specific attack methods
+    performAreaAttack(players) {
+        this.areaAttackCooldown = 4.0; // 4 second cooldown
+        this.attackCooldown = 1.0; // Prevent regular attacks during area attack
+        
+        // Create area attack effect
+        const areaAttack = {
+            type: 'boss_area_attack',
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            radius: 120,
+            damage: 50, // 2 hearts of damage
+            timeLeft: 0.8,
+            maxTime: 0.8,
+            warningTime: 0.3 // Show warning for 0.3 seconds before damage
+        };
+        
+        // Add to level effects for rendering and damage processing
+        if (this.gameLevel && this.gameLevel.effects) {
+            this.gameLevel.effects.push(areaAttack);
+        }
+        
+        console.log('Boss performed area attack!');
+    }
+    
+    initiateChargeAttack() {
+        this.chargeAttackCooldown = 6.0; // 6 second cooldown
+        this.isCharging = true;
+        this.chargeTarget = { x: this.target.x, y: this.target.y };
+        this.speed = this.chargeSpeed;
+        
+        console.log('Boss initiated charge attack!');
+    }
+    
+    handleChargeAttack(deltaTime, players, level) {
+        if (!this.chargeTarget) {
+            this.endChargeAttack();
+            return;
+        }
+        
+        // Move towards charge target at high speed
+        const dx = this.chargeTarget.x - this.x;
+        const dy = this.chargeTarget.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 20) {
+            // Reached target, end charge
+            this.endChargeAttack();
+            return;
+        }
+        
+        // Move towards target
+        const dirX = dx / distance;
+        const dirY = dy / distance;
+        
+        this.velocityX = dirX * this.speed;
+        this.velocityY = dirY * this.speed;
+        
+        // Update direction for sprite rendering
+        this.updateDirection(dirX, dirY);
+        
+        // Check for collision with players during charge
+        for (const player of players) {
+            if (player.isAlive && this.isCollidingWith(player)) {
+                // Deal charge damage
+                if (level && level.gameEngine && level.gameEngine.combatSystem) {
+                    level.gameEngine.combatSystem.damagePlayer(player, 75, this.x, this.y); // 3 hearts
+                }
+                this.endChargeAttack();
+                break;
+            }
+        }
+    }
+    
+    endChargeAttack() {
+        this.isCharging = false;
+        this.chargeTarget = null;
+        this.speed = this.originalSpeed;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.attackCooldown = 1.0; // Brief cooldown after charge
+    }
+    
     getCollisionBounds() {
         return {
             x: this.x + this.collisionPadding,
