@@ -66,7 +66,7 @@ export class Enemy {
                 this.hearts = 8; // 8 hearts (boss)
                 this.health = this.hearts * 25; // 200 HP
                 this.maxHealth = this.health;
-                this.speed = 60;
+                this.speed = 1; // Very slow boss
                 this.attackDamage = 50; // 2 hearts of damage
                 this.detectionRange = 250;
                 this.color = '#aa4444';
