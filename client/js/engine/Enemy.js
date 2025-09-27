@@ -203,6 +203,11 @@ export class Enemy {
     }
     
     updateTarget(players) {
+        // Boss doesn't change targets - it sticks with its selected target
+        if (this.type === 'mutant_boss') {
+            return;
+        }
+        
         let closestPlayer = null;
         let closestDistance = Infinity;
         
