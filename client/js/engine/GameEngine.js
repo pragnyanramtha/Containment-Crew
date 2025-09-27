@@ -79,6 +79,11 @@ export class GameEngine {
     destroy() {
         this.stop();
 
+        // Clean up level manager
+        if (this.levelManager) {
+            this.levelManager.destroy();
+        }
+
         // Remove event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('keyup', this.handleKeyUp);
