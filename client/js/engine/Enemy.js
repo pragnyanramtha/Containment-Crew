@@ -381,8 +381,13 @@ export class Enemy {
         };
         
         // Add to level effects for rendering and damage processing
-        if (this.gameLevel && this.gameLevel.effects) {
-            this.gameLevel.effects.push(areaAttack);
+        // We'll get the level reference from the game engine
+        const gameEngine = this.getGameEngine();
+        if (gameEngine) {
+            const currentLevel = gameEngine.getCurrentLevel();
+            if (currentLevel && currentLevel.effects) {
+                currentLevel.effects.push(areaAttack);
+            }
         }
         
         console.log('Boss performed area attack!');
