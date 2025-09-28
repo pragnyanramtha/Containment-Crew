@@ -198,19 +198,8 @@ export class GameStateManager extends EventEmitter {
                     return false;
                 }
                 
-                // Check movement speed (basic anti-cheat)
-                if (player.position) {
-                    const distance = Math.sqrt(
-                        Math.pow(input.x - player.position.x, 2) + 
-                        Math.pow(input.y - player.position.y, 2)
-                    );
-                    const timeDiff = Math.max(0.016, (Date.now() - player.lastUpdate) / 1000);
-                    const speed = distance / timeDiff;
-                    
-                    if (speed > 300) { // Max speed check
-                        return false;
-                    }
-                }
+                // Speed check removed for compatibility
+                // Basic position update without speed validation
                 return true;
                 
             case 'attack':
