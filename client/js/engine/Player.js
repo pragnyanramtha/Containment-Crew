@@ -1,9 +1,26 @@
 export class Player {
-    constructor(id, x = 0, y = 0, color = '#00ff00') {
-        this.id = id;
-        this.x = x;
-        this.y = y;
-        this.color = color;
+    constructor(config) {
+        // Handle both old (id, x, y, color) and new (config object) constructor patterns
+        if (typeof config === 'string') {
+            // Old pattern: constructor(id, x, y, color)
+            this.id = config;
+            this.x = arguments[1] || 0;
+            this.y = arguments[2] || 0;
+            this.color = arguments[3] || '#00ff00';
+            this.name = this.id;
+            this.isLocal = false;
+        } else {
+            // New pattern: constructor(config)
+            this.id = config.id;
+            this.x = config.x || 0;
+            this.y = config.y || 0;
+            this.color = config.color || '#00ff00';
+            this.name = config.name || config.id;
+            this.isLocal = config.isLocal || false;
+        }
+        
+        // Network manager reference (will be set by GameEngine)
+        this.networkManager = null;
         
         // Player properties
         this.width = 32;
@@ -39,7 +56,7 @@ export class Player {
         
         // Sprite properties
         this.spriteScale = 1;
-        this.spriteBaseName = `player_${id}`;
+        this.spriteBaseName = `player_${this.id}`;
         
         // Collision bounds
         this.collisionPadding = 4; // Smaller collision box than sprite
@@ -47,6 +64,90 @@ export class Player {
         // Developer settings properties
         this.isInvincible = false;
         this.speedMultiplier = 1.0;
+        
+        // Network validation
+        this.networkManager = null;
+        this.lastNetworkUpdate = 0;
+        this.networkUpdateInterval = 50; // Send updates every 50ms
+    }
+    
+    // Set network manager for sending validated actions
+    setNetworkManager(networkManager) {
+        this.networkManager = networkManager;
+    }
+    
+    // Send movement action to server with validation
+    sendMovementAction() {
+        if (!this.networkManager || !this.networkManager.isConnected) {
+            return;
+        }
+        
+        const now = Date.now();
+        if (now - this.lastNetworkUpdate < this.networkUpdateInterval) {
+            return; // Rate limiting
+        }
+        
+        const action = {
+            type: 'move',
+            x: this.x,
+            y: this.y,
+            direction: this.direction,
+            isMoving: this.isMoving,
+            isDashing: this.isDashing
+        };
+        
+        if (this.networkManager.sendValidatedPlayerAction) {
+            this.networkManager.sendValidatedPlayerAction(action);
+        } else {
+            this.networkManager.sendPlayerAction(action);
+        }
+        
+        this.lastNetworkUpdate = now;
+    }
+    
+    // Send attack action to server with validation
+    sendAttackAction(targetId = null) {
+        if (!this.networkManager || !this.networkManager.isConnected) {
+            return;
+        }
+        
+        const action = {
+            type: 'attack',
+            x: this.x,
+            y: this.y,
+            direction: this.direction,
+            targetId: targetId,
+            damage: this.strength
+        };
+        
+        if (this.networkManager.sendValidatedPlayerAction) {
+            return this.networkManager.sendValidatedPlayerAction(action);
+        } else {
+            this.networkManager.sendPlayerAction(action);
+            return true;
+        }
+    }
+    
+    // Send dash action to server with validation
+    sendDashAction(distance) {
+        if (!this.networkManager || !this.networkManager.isConnected) {
+            return;
+        }
+        
+        const action = {
+            type: 'dash',
+            x: this.x,
+            y: this.y,
+            direction: this.direction,
+            distance: distance
+        };
+        
+        if (this.networkManager.sendValidatedPlayerAction) {
+            return this.networkManager.sendValidatedPlayerAction(action);
+        } else {
+            this.networkManager.sendPlayerAction(action);
+            return true;
+        }
     }
     
     update(deltaTime, keys, canvasWidth, canvasHeight) {
@@ -361,5 +462,56 @@ export class Player {
                thisBounds.x + thisBounds.width > otherBounds.x &&
                thisBounds.y < otherBounds.y + otherBounds.height &&
                thisBounds.y + thisBounds.height > otherBounds.y;
+    }
+
+    // Network methods
+    setNetworkManager(networkManager) {
+        this.networkManager = networkManager;
+    }
+
+    sendMovementAction() {
+        if (!this.networkManager || !this.isLocal) return;
+        
+        const action = {
+            type: 'move',
+            x: this.x,
+            y: this.y,
+            vx: this.velocityX,
+            vy: this.velocityY,
+            direction: this.direction,
+            isMoving: this.isMoving,
+            timestamp: Date.now()
+        };
+        
+        this.networkManager.sendPlayerAction(action);
+    }
+
+    sendAttackAction(targetId = null) {
+        if (!this.networkManager || !this.isLocal) return;
+        
+        const action = {
+            type: 'attack',
+            x: this.x,
+            y: this.y,
+            direction: this.direction,
+            targetId: targetId,
+            damage: this.strength
+        };
+        
+        this.networkManager.sendPlayerAction(action);
+    }
+
+    sendDashAction() {
+        if (!this.networkManager || !this.isLocal) return;
+        
+        const action = {
+            type: 'dash',
+            x: this.x,
+            y: this.y,
+            direction: this.direction,
+            distance: this.dashDistance
+        };
+        
+        this.networkManager.sendPlayerAction(action);
     }
 }

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio System Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #222;
+            color: #fff;
+            padding: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #555;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .volume-control {
+            margin: 10px 0;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio System Test</h1>
+    
+    <div class="status" id="status">
+        <p>Audio System Status: <span id="audioStatus">Initializing...</span></p>
+        <p>Loading Progress: <span id="loadingProgress">0%</span></p>
+        <p>Volume Settings: <span id="volumeSettings">Loading...</span></p>
+    </div>
+    
+    <div class="controls">
+        <h3>Music Controls</h3>
+        <button onclick="playMusic('level0')">Play Level 0 Music</button>
+        <button onclick="playMusic('level1')">Play Level 1 Music</button>
+        <button onclick="playMusic('level2')">Play Level 2 Music</button>
+        <button onclick="stopMusic()">Stop Music</button>
+    </div>
+    
+    <div class="controls">
+        <h3>Sound Effects</h3>
+        <button onclick="playSFX('player_attack')">Player Attack</button>
+        <button onclick="playSFX('hit_impact')">Hit Impact</button>
+        <button onclick="playSFX('enemy_death')">Enemy Death</button>
+        <button onclick="playSFX('button_press')">Button Press</button>
+        <button onclick="playSFX('puzzle_solve')">Puzzle Solve</button>
+        <button onclick="playSFX('reactor_shutdown')">Reactor Shutdown</button>
+    </div>
+    
+    <div class="controls">
+        <h3>Volume Controls</h3>
+        <div class="volume-control">
+            <label>Master Volume: </label>
+            <input type="range" id="masterVolume" min="0" max="100" value="70" onchange="setMasterVolume(this.value)">
+            <span id="masterVolumeValue">70%</span>
+        </div>
+        <div class="volume-control">
+            <label>Music Volume: </label>
+            <input type="range" id="musicVolume" min="0" max="100" value="50" onchange="setMusicVolume(this.value)">
+            <span id="musicVolumeValue">50%</span>
+        </div>
+        <div class="volume-control">
+            <label>SFX Volume: </label>
+            <input type="range" id="sfxVolume" min="0" max="100" value="80" onchange="setSFXVolume(this.value)">
+            <span id="sfxVolumeValue">80%</span>
+        </div>
+        <button onclick="toggleMute()">Toggle Mute</button>
+    </div>
+
+    <script type="module">
+        import { AudioManager } from './client/js/engine/AudioManager.js';
+        
+        let audioManager;
+        
+        async function initializeAudio() {
+            try {
+                audioManager = new AudioManager();
+                updateStatus();
+                
+                // Load audio assets (will fail gracefully for missing files)
+                await audioManager.loadAudioAssets();
+                updateStatus();
+                
+                console.log('Audio system test initialized');
+            } catch (error) {
+                console.error('Failed to initialize audio system:', error);
+                document.getElementById('audioStatus').textContent = 'Failed to initialize';
+            }
+        }
+        
+        function updateStatus() {
+            if (!audioManager) return;
+            
+            const isReady = audioManager.isReady();
+            document.getElementById('audioStatus').textContent = isReady ? 'Ready' : 'Loading...';
+            
+            const progress = audioManager.getLoadingProgress();
+            document.getElementById('loadingProgress').textContent = 
+                `${Math.round(progress.progress * 100)}% (${progress.loaded}/${progress.total})`;
+            
+            const volumes = audioManager.getVolumeSettings();
+            document.getElementById('volumeSettings').textContent = 
+                `Master: ${Math.round(volumes.master * 100)}%, Music: ${Math.round(volumes.music * 100)}%, SFX: ${Math.round(volumes.sfx * 100)}%, Muted: ${volumes.isMuted}`;
+        }
+        
+        // Make functions global for button onclick handlers
+        window.playMusic = (name) => {
+            if (audioManager) {
+                audioManager.playMusic(`music_${name}`, true);
+            }
+        };
+        
+        window.stopMusic = () => {
+            if (audioManager) {
+                audioManager.stopMusic();
+            }
+        };
+        
+        window.playSFX = (name) => {
+            if (audioManager) {
+                audioManager.playSFX(name);
+            }
+        };
+        
+        window.setMasterVolume = (value) => {
+            if (audioManager) {
+                audioManager.setMasterVolume(value / 100);
+                document.getElementById('masterVolumeValue').textContent = value + '%';
+                updateStatus();
+            }
+        };
+        
+        window.setMusicVolume = (value) => {
+            if (audioManager) {
+                audioManager.setMusicVolume(value / 100);
+                document.getElementById('musicVolumeValue').textContent = value + '%';
+                updateStatus();
+            }
+        };
+        
+        window.setSFXVolume = (value) => {
+            if (audioManager) {
+                audioManager.setSFXVolume(value / 100);
+                document.getElementById('sfxVolumeValue').textContent = value + '%';
+                updateStatus();
+            }
+        };
+        
+        window.toggleMute = () => {
+            if (audioManager) {
+                const isMuted = audioManager.toggleMute();
+                updateStatus();
+            }
+        };
+        
+        // Update status every second
+        setInterval(updateStatus, 1000);
+        
+        // Initialize on page load
+        initializeAudio();
+    </script>
+</body>
+</html>

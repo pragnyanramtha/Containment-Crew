@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Placeholder Audio Files</title>
+</head>
+<body>
+    <h1>Audio File Generator</h1>
+    <p>This will create silent placeholder audio files for development.</p>
+    <button onclick="createAudioFiles()">Create Placeholder Audio Files</button>
+    <div id="status"></div>
+
+    <script>
+        async function createAudioFiles() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Creating audio files...';
+
+            // Create a silent audio buffer
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const sampleRate = audioContext.sampleRate;
+            const duration = 1; // 1 second
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            
+            // Create silent audio (all zeros)
+            const channelData = buffer.getChannelData(0);
+            for (let i = 0; i < channelData.length; i++) {
+                channelData[i] = 0;
+            }
+
+            // Convert to WAV blob
+            const wavBlob = bufferToWav(buffer);
+            
+            // List of audio files needed
+            const audioFiles = [
+                'assets/audio/music/menu.ogg',
+                'assets/audio/music/tutorial.ogg',
+                'assets/audio/music/facility.ogg',
+                'assets/audio/music/boss_fight.ogg',
+                'assets/audio/music/puzzle.ogg',
+                'assets/audio/music/sacrifice.ogg',
+                'assets/audio/music/final_challenge.ogg',
+                'assets/audio/music/ending.ogg',
+                'assets/audio/sfx/footstep.ogg',
+                'assets/audio/sfx/swing.ogg',
+                'assets/audio/sfx/dash.ogg',
+                'assets/audio/sfx/player_hurt.ogg',
+                'assets/audio/sfx/player_death.ogg',
+                'assets/audio/sfx/enemy_hurt.ogg',
+                'assets/audio/sfx/enemy_death.ogg',
+                'assets/audio/sfx/boss_roar.ogg',
+                'assets/audio/sfx/hit.ogg',
+                'assets/audio/sfx/button.ogg',
+                'assets/audio/sfx/door.ogg',
+                'assets/audio/sfx/elevator.ogg',
+                'assets/audio/sfx/puzzle_complete.ogg',
+                'assets/audio/sfx/mechanism.ogg',
+                'assets/audio/sfx/rock_fall.ogg',
+                'assets/audio/sfx/radiation.ogg',
+                'assets/audio/sfx/wind.ogg',
+                'assets/audio/sfx/reactor_shutdown.ogg',
+                'assets/audio/sfx/text_type.ogg',
+                'assets/audio/sfx/level_complete.ogg',
+                'assets/audio/sfx/sacrifice.ogg'
+            ];
+
+            status.innerHTML = `Note: This is a client-side demo. To actually create the files, you would need to:<br>
+            1. Create the directories: client/assets/audio/music and client/assets/audio/sfx<br>
+            2. Add placeholder .ogg files for each of these paths:<br>
+            ${audioFiles.map(f => `- ${f}`).join('<br>')}`;
+        }
+
+        // Simple WAV file creation (for demonstration)
+        function bufferToWav(buffer) {
+            const length = buffer.length;
+            const arrayBuffer = new ArrayBuffer(44 + length * 2);
+            const view = new DataView(arrayBuffer);
+            
+            // WAV header
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, buffer.sampleRate, true);
+            view.setUint32(28, buffer.sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, length * 2, true);
+            
+            // Convert float samples to 16-bit PCM
+            const channelData = buffer.getChannelData(0);
+            let offset = 44;
+            for (let i = 0; i < length; i++) {
+                const sample = Math.max(-1, Math.min(1, channelData[i]));
+                view.setInt16(offset, sample * 0x7FFF, true);
+                offset += 2;
+            }
+            
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+    </script>
+</body>
+</html>

@@ -106,6 +106,14 @@ export class AudioManager {
      * Load audio assets
      */
     async loadAudioAssets() {
+        // Skip audio loading in development if assets don't exist
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isDevelopment) {
+            console.log('AudioManager: Skipping audio loading in development mode');
+            this.isLoading = false;
+            return;
+        }
+
         console.log('AudioManager: Loading audio assets...');
         this.isLoading = true;
         this.loadedCount = 0;
@@ -216,7 +224,13 @@ export class AudioManager {
             this.loadedCount++;
             console.log(`AudioManager: Loaded ${name} (${this.loadedCount}/${this.totalCount})`);
         } catch (error) {
-            console.warn(`AudioManager: Failed to load ${name} from ${url}:`, error);
+            // Only log the first few missing files to avoid spam
+            if (this.loadedCount < 3) {
+                console.warn(`AudioManager: Failed to load ${name} from ${url} (${error.message})`);
+                if (this.loadedCount === 2) {
+                    console.warn('AudioManager: Suppressing further audio loading warnings...');
+                }
+            }
             // Continue loading other assets even if one fails
         }
     }

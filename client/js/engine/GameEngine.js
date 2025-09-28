@@ -11,6 +11,7 @@ import { DeveloperSettings } from './DeveloperSettings.js';
 import { HUDManager } from './HUDManager.js';
 import { VisualEffectsManager } from './VisualEffectsManager.js';
 import { AudioManager } from './AudioManager.js';
+import { ValidationManager } from './ValidationManager.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
@@ -69,6 +70,9 @@ export class GameEngine {
 
         // Audio system
         this.audioManager = new AudioManager();
+
+        // Validation system
+        this.validationManager = new ValidationManager(this);
 
         // Game state
         this.gameState = 'character_selection'; // 'character_selection', 'playing'
@@ -153,9 +157,27 @@ export class GameEngine {
     
     async startMultiplayerGame(gameData) {
         console.log('Starting multiplayer game with data:', gameData);
+        console.log('NetworkManager playerId:', this.networkManager.playerId);
         
-        // Clear existing players except keep test player for now
-        // In full multiplayer, we'd replace this with actual network players
+        // Clear existing players and set up multiplayer players
+        this.players.clear();
+        
+        // Create players from server data
+        if (gameData.players) {
+            gameData.players.forEach(playerData => {
+                const playerId = playerData.id;
+                const player = this.createPlayerFromData(playerData);
+                this.players.set(playerId, player);
+                
+                // Set local player ID if this is our player
+                if (playerId === this.networkManager.playerId) {
+                    this.localPlayerId = playerId;
+                    console.log('Set local player ID:', this.localPlayerId);
+                }
+            });
+        }
+        
+        console.log('Created', this.players.size, 'multiplayer players');
         
         // Set up multiplayer state
         this.gameState = 'playing';
@@ -163,7 +185,150 @@ export class GameEngine {
         // Start with Level 0
         await this.levelManager.changeLevel(0);
         
+        // Debug: Check canvas state
+        console.log('GameEngine: Canvas dimensions:', this.canvas.width, 'x', this.canvas.height);
+        console.log('GameEngine: Canvas style:', this.canvas.style.display);
+        console.log('GameEngine: Canvas parent:', this.canvas.parentElement?.id);
+        
+        // Set up network callbacks for multiplayer synchronization
+        this.setupMultiplayerCallbacks();
+        
+        // Start the game loop
+        this.start();
+        
         console.log('Multiplayer game started successfully');
+    }
+
+    /**
+     * Create a player from server data
+     */
+    createPlayerFromData(playerData) {
+        const playerId = playerData.id;
+        const playerName = playerData.name;
+        const x = playerData.position?.x || 100;
+        const y = playerData.position?.y || 100;
+        
+        const player = new Player({
+            id: playerId,
+            name: playerName,
+            x: x,
+            y: y,
+            color: this.getPlayerColor(playerId),
+            isLocal: playerId === this.networkManager.playerId
+        });
+        
+        // Set network manager reference for network actions
+        player.setNetworkManager(this.networkManager);
+        
+        console.log('Created player:', player.name, 'at', player.x, player.y, 'isLocal:', player.isLocal);
+        return player;
+    }
+
+    /**
+     * Get a unique color for each player
+     */
+    getPlayerColor(playerId) {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+        const hash = playerId.split('').reduce((a, b) => {
+            a = ((a << 5) - a) + b.charCodeAt(0);
+            return a & a;
+        }, 0);
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    /**
+     * Set up multiplayer network callbacks
+     */
+    setupMultiplayerCallbacks() {
+        // Handle game state updates from server
+        this.networkManager.onGameStateUpdate = (gameState) => {
+            this.handleGameStateUpdate(gameState);
+        };
+
+        // Handle individual player actions from other players
+        this.networkManager.onPlayerAction = (data) => {
+            this.handlePlayerAction(data);
+        };
+    }
+
+    /**
+     * Handle game state updates from server
+     */
+    handleGameStateUpdate(gameState) {
+        if (!gameState.players) return;
+        
+        // Update existing players or create new ones
+        gameState.players.forEach(serverPlayer => {
+            const playerId = serverPlayer.id;
+            const playerName = serverPlayer.name;
+            let player = this.players.get(playerId);
+            
+            if (!player) {
+                // Create new player if they don't exist
+                player = this.createPlayerFromData(serverPlayer);
+                this.players.set(playerId, player);
+                console.log('Added new player from server:', playerName);
+            } else {
+                // Only update remote players' positions from server
+                // Local player position is handled by local input
+                if (playerId !== this.localPlayerId) {
+                    if (serverPlayer.position) {
+                        player.x = serverPlayer.position.x;
+                        player.y = serverPlayer.position.y;
+                    }
+                    player.health = serverPlayer.health || player.health;
+                    player.isAlive = serverPlayer.isAlive !== false;
+                }
+            }
+        });
+        
+        // Remove players that are no longer in the game
+        const serverPlayerIds = new Set(gameState.players.map(p => p.id));
+        for (const [playerId, player] of this.players) {
+            if (!serverPlayerIds.has(playerId)) {
+                this.players.delete(playerId);
+                console.log('Removed player:', player.name);
+            }
+        }
+    }
+
+    /**
+     * Handle individual player actions from other players
+     */
+    handlePlayerAction(data) {
+        const { playerId, action } = data;
+        
+        // Don't process our own actions (we already handle them locally)
+        if (playerId === this.localPlayerId) return;
+        
+        const player = this.players.get(playerId);
+        if (!player) {
+            console.warn('Received action for unknown player:', playerId);
+            return;
+        }
+        
+        // Apply the action to the player
+        switch (action.type) {
+            case 'move':
+                player.x = action.x;
+                player.y = action.y;
+                player.direction = action.direction;
+                player.isMoving = action.isMoving;
+                break;
+                
+            case 'attack':
+                // Handle attack animation/effects
+                player.direction = action.direction;
+                // Could trigger attack animation here
+                break;
+                
+            case 'dash':
+                player.x = action.x;
+                player.y = action.y;
+                player.direction = action.direction;
+                // Could trigger dash animation here
+                break;
+        }
     }
 
     stop() {
@@ -206,6 +371,11 @@ export class GameEngine {
         // Clean up audio system
         if (this.audioManager) {
             this.audioManager.destroy();
+        }
+
+        // Clean up validation system
+        if (this.validationManager) {
+            this.validationManager.destroy();
         }
 
         // Remove event listeners
@@ -261,18 +431,29 @@ export class GameEngine {
         for (const player of players) {
             const wasMoving = player.isMoving;
             const wasDashing = player.isDashing;
+            const prevX = player.x;
+            const prevY = player.y;
+            
             player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
             
-            // Play sound effects for local player
-            if (player.id === this.localPlayerId && player.isAlive && this.audioManager) {
-                // Movement sound
-                if (player.isMoving && !wasMoving) {
-                    this.audioManager.playSFX('player_move', 0.3);
+            // Send network updates for local player
+            if (player.id === this.localPlayerId && player.isAlive) {
+                // Send movement updates if position changed
+                if (player.x !== prevX || player.y !== prevY || player.isMoving !== wasMoving) {
+                    player.sendMovementAction();
                 }
                 
-                // Dash sound
-                if (player.isDashing && !wasDashing) {
-                    this.audioManager.playSFX('player_dash', 0.7);
+                // Play sound effects
+                if (this.audioManager) {
+                    // Movement sound
+                    if (player.isMoving && !wasMoving) {
+                        this.audioManager.playSFX('player_move', 0.3);
+                    }
+                    
+                    // Dash sound
+                    if (player.isDashing && !wasDashing) {
+                        this.audioManager.playSFX('player_dash', 0.7);
+                    }
                 }
             }
         }
@@ -339,6 +520,11 @@ export class GameEngine {
     }
 
     render() {
+        // Debug: Log render calls
+        if (Math.random() < 0.01) { // Log occasionally to avoid spam
+            console.log('GameEngine render called, gameState:', this.gameState, 'currentLevel:', this.levelManager.currentLevelNumber);
+        }
+
         // Render character selection screen
         if (this.gameState === 'character_selection') {
             this.renderCharacterSelection();
@@ -429,7 +615,13 @@ export class GameEngine {
         if (event.code === 'Space' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
             const localPlayer = this.getLocalPlayer();
             if (localPlayer && localPlayer.isAlive) {
-                this.combatSystem.tryPlayerAttack(localPlayer.id, 0, 0); // Position not needed for swing attacks
+                // Send validated attack action to server
+                const attackSent = localPlayer.sendAttackAction();
+                
+                // Only execute local attack if validation passed
+                if (attackSent !== false) {
+                    this.combatSystem.tryPlayerAttack(localPlayer.id, 0, 0); // Position not needed for swing attacks
+                }
             }
         }
     }
@@ -620,10 +812,22 @@ export class GameEngine {
 
     createTestPlayer() {
         // Create a test player for development
-        const testPlayer = new Player('test-player', 100, 100, '#00ff00');
+        const testPlayer = new Player({
+            id: 'test-player',
+            name: 'test-player',
+            x: 100,
+            y: 100,
+            color: '#00ff00',
+            isLocal: true
+        });
 
         // Apply default character stats (scout)
         this.characterManager.applyCharacterStats(testPlayer, 'scout');
+        
+        // Set up network manager for validation
+        if (this.networkManager) {
+            testPlayer.setNetworkManager(this.networkManager);
+        }
 
         this.players.set('test-player', testPlayer);
         this.localPlayerId = 'test-player';
@@ -631,6 +835,12 @@ export class GameEngine {
 
     addPlayer(id, x, y, color) {
         const player = new Player(id, x, y, color);
+        
+        // Set up network manager for validation
+        if (this.networkManager) {
+            player.setNetworkManager(this.networkManager);
+        }
+        
         this.players.set(id, player);
         return player;
     }

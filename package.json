@@ -1,0 +1,21 @@
+{
+  "name": "sacrifices-game",
+  "version": "1.0.0",
+  "description": "Sacrifices Must Be Made - A multiplayer browser game",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "c8": "^8.0.0",
+    "jsdom": "^23.0.0"
+  },
+  "keywords": ["game", "multiplayer", "browser", "canvas"],
+  "author": "",
+  "license": "MIT"
+}

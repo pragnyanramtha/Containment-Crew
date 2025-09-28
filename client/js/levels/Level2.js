@@ -76,6 +76,9 @@ export class Level2 extends Level {
     }
     
     updateLevel(deltaTime, players, gameEngine) {
+        // Store references for use in other methods
+        this.gameEngine = gameEngine;
+        
         // Show intro message
         if (!this.introMessageShown) {
             this.introMessageTime += deltaTime;
@@ -193,6 +196,7 @@ export class Level2 extends Level {
     }
     
     updateButton(players) {
+        const wasPressed = this.button.pressed;
         this.button.pressed = false;
         this.button.playerOn = null;
         
@@ -206,6 +210,11 @@ export class Level2 extends Level {
                 this.playerOnButton = player;
                 break;
             }
+        }
+        
+        // Play button press sound effect
+        if (this.button.pressed && !wasPressed && this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('button_press', 0.8);
         }
         
         if (!this.button.pressed) {
@@ -242,6 +251,12 @@ export class Level2 extends Level {
         console.log('Completing first sacrifice...');
         this.sacrificeCompleted = true;
         this.elevatorActivated = true;
+        
+        // Play elevator and sacrifice sound effects
+        if (this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('elevator_move', 0.8);
+            this.gameEngine.getAudioManager().playSFX('sacrifice_moment', 1.0);
+        }
         
         // Sacrifice the player on the button
         if (this.playerOnButton) {
@@ -287,6 +302,11 @@ export class Level2 extends Level {
             this.effects = [];
         }
         this.effects.push(effect);
+        
+        // Use visual effects manager for enhanced sacrifice effects
+        if (this.gameEngine && this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.createPlayerSacrifice(player);
+        }
     }
     
     checkObjective(objective, players, gameEngine) {

@@ -106,6 +106,11 @@ export class Level4 extends Level {
         this.sacrificeCompleted = true;
         this.completionTimer = 0;
         
+        // Play sacrifice sound effect
+        if (this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('sacrifice_moment', 1.0);
+        }
+        
         // Complete the objectives
         this.completeObjective('solve_puzzle');
         this.completeObjective('sacrifice_one_player');

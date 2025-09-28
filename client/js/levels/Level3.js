@@ -117,6 +117,11 @@ export class Level3 extends Level {
         this.puzzleCompleted = true;
         this.completionTimer = 0;
         
+        // Play puzzle completion sound
+        if (this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('puzzle_solve', 1.0);
+        }
+        
         // Complete the objective
         this.completeObjective('solve_puzzle');
         

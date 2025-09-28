@@ -31,6 +31,10 @@ export class Level5 extends Level {
         this.endingTimer = 0;
         this.endingDuration = 8.0;
         
+        // Input handling
+        this.playerNearReactor = null;
+        this.interactionPrompted = false;
+        
         // Background color for reactor core
         this.backgroundColor = '#2a1a1a';
     }
@@ -51,6 +55,8 @@ export class Level5 extends Level {
         this.shutdownProgress = 0;
         this.endingTriggered = false;
         this.endingTimer = 0;
+        this.playerNearReactor = null;
+        this.interactionPrompted = false;
         
         // Initialize environmental hazard system
         this.initializeHazardSystem();
@@ -76,6 +82,9 @@ export class Level5 extends Level {
     }
     
     updateLevel(deltaTime, players, gameEngine) {
+        // Store references for use in other methods
+        this.gameEngine = gameEngine;
+        
         // Show intro message
         if (!this.introMessageShown) {
             this.introMessageTime += deltaTime;
@@ -117,6 +126,7 @@ export class Level5 extends Level {
     
     checkReactorInteraction(players) {
         const alivePlayers = players.filter(p => p.isAlive);
+        this.playerNearReactor = null;
         
         for (const player of alivePlayers) {
             const distance = Math.sqrt(
@@ -131,11 +141,8 @@ export class Level5 extends Level {
                     console.log('Player reached the reactor controls!');
                 }
                 
-                // Check for interaction input (Space key)
-                // This would normally be handled by input system, but for now we'll auto-trigger
-                if (this.reactorReached && !this.shutdownInProgress) {
-                    this.startReactorShutdown();
-                }
+                // Store the player near reactor for input handling
+                this.playerNearReactor = player;
                 break;
             }
         }
@@ -146,10 +153,34 @@ export class Level5 extends Level {
         this.shutdownInProgress = true;
         this.shutdownProgress = 0;
         
+        // Play reactor shutdown sound effect
+        if (this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('reactor_shutdown', 1.0);
+        }
+        
         // Stop environmental hazards during shutdown
         if (this.hazardSystem) {
             this.hazardSystem.pauseHazards();
         }
+        
+        // Create reactor shutdown effect
+        this.createReactorShutdownEffect();
+    }
+    
+    createReactorShutdownEffect() {
+        const effect = {
+            type: 'reactor_shutdown',
+            x: this.reactor.x + this.reactor.width / 2,
+            y: this.reactor.y + this.reactor.height / 2,
+            timeLeft: this.shutdownDuration,
+            maxTime: this.shutdownDuration,
+            pulseTimer: 0
+        };
+        
+        if (!this.effects) {
+            this.effects = [];
+        }
+        this.effects.push(effect);
     }
     
     updateReactorShutdown(deltaTime, players) {
@@ -165,8 +196,43 @@ export class Level5 extends Level {
         this.shutdownInProgress = false;
         this.completeObjective('shutdown_reactor');
         
-        // Trigger ending sequence
-        this.triggerEndingSequence();
+        // Create reactor shutdown completion effect
+        this.createReactorCompletionEffect();
+        
+        // Trigger ending sequence after a brief delay
+        setTimeout(() => {
+            this.triggerEndingSequence();
+        }, 1500);
+    }
+    
+    createReactorCompletionEffect() {
+        const effect = {
+            type: 'reactor_completion',
+            x: this.reactor.x + this.reactor.width / 2,
+            y: this.reactor.y + this.reactor.height / 2,
+            timeLeft: 3.0,
+            maxTime: 3.0,
+            particles: []
+        };
+        
+        // Create explosion particles
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            effect.particles.push({
+                x: effect.x,
+                y: effect.y,
+                vx: Math.cos(angle) * (100 + Math.random() * 100),
+                vy: Math.sin(angle) * (100 + Math.random() * 100),
+                life: 2.0 + Math.random() * 1.0,
+                maxLife: 2.0 + Math.random() * 1.0,
+                size: 3 + Math.random() * 5
+            });
+        }
+        
+        if (!this.effects) {
+            this.effects = [];
+        }
+        this.effects.push(effect);
     }
     
     triggerEndingSequence() {
@@ -201,6 +267,19 @@ export class Level5 extends Level {
         }
     }
     
+    /**
+     * Handle input for reactor interaction
+     */
+    handleInput(keys) {
+        // Check if player is near reactor and can interact
+        if (this.playerNearReactor && this.reactorReached && !this.shutdownInProgress && !this.endingTriggered) {
+            // Check for Space key press to start reactor shutdown
+            if (keys && keys['Space']) {
+                this.startReactorShutdown();
+            }
+        }
+    }
+    
     createRadiationDeathEffect(player) {
         const effect = {
             type: 'radiation_death',
@@ -215,6 +294,15 @@ export class Level5 extends Level {
             this.effects = [];
         }
         this.effects.push(effect);
+        
+        // Use visual effects manager for enhanced radiation death effects
+        if (this.gameEngine && this.gameEngine.visualEffectsManager) {
+            this.gameEngine.visualEffectsManager.createEnvironmentalHazard(
+                'reactor_shutdown', 
+                player.x + player.width / 2, 
+                player.y + player.height / 2
+            );
+        }
     }
     
     checkObjective(objective, players, gameEngine) {
@@ -287,8 +375,18 @@ export class Level5 extends Level {
     }
     
     renderReactor(ctx) {
+        // Determine reactor state color
+        let reactorColor = '#666666'; // Inactive
+        if (this.endingTriggered) {
+            reactorColor = '#0088ff'; // Shutdown complete
+        } else if (this.shutdownInProgress) {
+            reactorColor = '#ffaa00'; // Shutting down
+        } else if (this.reactor.isActive) {
+            reactorColor = '#00aa00'; // Active
+        }
+        
         // Reactor control panel
-        ctx.fillStyle = this.reactor.isActive ? '#00aa00' : '#666666';
+        ctx.fillStyle = reactorColor;
         ctx.fillRect(this.reactor.x, this.reactor.y, this.reactor.width, this.reactor.height);
         
         // Reactor border
@@ -296,26 +394,47 @@ export class Level5 extends Level {
         ctx.lineWidth = 3;
         ctx.strokeRect(this.reactor.x, this.reactor.y, this.reactor.width, this.reactor.height);
         
-        // Reactor details
-        ctx.fillStyle = '#ffff00';
+        // Reactor status lights
+        const lightColor = this.endingTriggered ? '#0088ff' : 
+                          this.shutdownInProgress ? '#ffaa00' : '#ffff00';
+        ctx.fillStyle = lightColor;
         ctx.fillRect(this.reactor.x + 10, this.reactor.y + 10, 20, 20);
         ctx.fillRect(this.reactor.x + 40, this.reactor.y + 10, 20, 20);
         ctx.fillRect(this.reactor.x + 70, this.reactor.y + 10, 20, 20);
         
         // Control buttons
-        ctx.fillStyle = '#ff0000';
+        const buttonColor = this.endingTriggered ? '#0044aa' : 
+                           this.shutdownInProgress ? '#ff6600' : '#ff0000';
+        ctx.fillStyle = buttonColor;
         ctx.fillRect(this.reactor.x + 20, this.reactor.y + 40, 30, 15);
         ctx.fillRect(this.reactor.x + 60, this.reactor.y + 40, 30, 15);
+        
+        // Status display
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(this.reactor.x + 10, this.reactor.y + 60, this.reactor.width - 20, 15);
+        
+        // Status text
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        let statusText = 'CRITICAL';
+        if (this.endingTriggered) {
+            statusText = 'SHUTDOWN';
+        } else if (this.shutdownInProgress) {
+            statusText = 'SHUTTING DOWN';
+        } else if (this.reactorReached) {
+            statusText = 'READY';
+        }
+        ctx.fillText(statusText, this.reactor.x + this.reactor.width / 2, this.reactor.y + 72);
         
         // Label
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 14px monospace';
-        ctx.textAlign = 'center';
         ctx.fillText('REACTOR', this.reactor.x + this.reactor.width / 2, this.reactor.y - 10);
         ctx.fillText('CONTROLS', this.reactor.x + this.reactor.width / 2, this.reactor.y + this.reactor.height + 20);
         
         // Interaction range indicator (if player is nearby)
-        if (this.reactorReached) {
+        if (this.playerNearReactor && !this.shutdownInProgress && !this.endingTriggered) {
             ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
@@ -465,9 +584,19 @@ export class Level5 extends Level {
             ctx.font = 'bold 12px monospace';
             ctx.fillText('REACTOR CONTROLS ACCESSIBLE', 10, yOffset + 10);
             
-            if (!this.shutdownInProgress && !this.endingTriggered) {
+            if (this.playerNearReactor && !this.shutdownInProgress && !this.endingTriggered) {
                 ctx.fillStyle = '#ffff00';
                 ctx.fillText('Press SPACE to shut down reactor', 10, yOffset + 25);
+                
+                // Also show interaction prompt near reactor
+                ctx.save();
+                ctx.fillStyle = '#ffff00';
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('Press SPACE to shutdown', 
+                    this.reactor.x + this.reactor.width / 2, 
+                    this.reactor.y - 30);
+                ctx.restore();
             }
         }
     }
@@ -656,6 +785,11 @@ class EnvironmentalHazardSystem {
             warningTime: 1.0,
             warningTimer: 0
         };
+        
+        // Play falling rock sound effect
+        if (this.gameEngine && this.gameEngine.getAudioManager()) {
+            this.gameEngine.getAudioManager().playSFX('falling_rock', 0.6, 0.8 + Math.random() * 0.4);
+        }
         
         this.fallingRocks.push(rock);
         console.log('Spawned falling rock');

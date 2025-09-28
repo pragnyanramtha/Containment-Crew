@@ -255,13 +255,31 @@ export class LobbyManager {
     }
     
     handleGameStart(data) {
+        console.log('LobbyManager: Handling game start, transitioning screens...');
+        
         // Hide lobby and show game
-        document.getElementById('lobbyScreen').style.display = 'none';
-        document.getElementById('gameScreen').style.display = 'flex';
+        const lobbyScreen = document.getElementById('lobbyScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        
+        if (lobbyScreen) {
+            lobbyScreen.style.display = 'none';
+            console.log('LobbyManager: Lobby screen hidden');
+        } else {
+            console.error('LobbyManager: Could not find lobbyScreen element');
+        }
+        
+        if (gameScreen) {
+            gameScreen.style.display = 'flex';
+            console.log('LobbyManager: Game screen shown');
+        } else {
+            console.error('LobbyManager: Could not find gameScreen element');
+        }
         
         // Notify game engine that game is starting
         if (this.onGameStart) {
             this.onGameStart(data);
+        } else {
+            console.error('LobbyManager: No onGameStart callback set');
         }
     }
     

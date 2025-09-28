@@ -1,15 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sacrifices Must Be Made</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-    <link rel="preload" href="styles.css" as="style">
-    <link rel="stylesheet" href="styles.css">
+    <title>Lobby Test - Sacrifices Must Be Made</title>
+    <link rel="stylesheet" href="client/styles.css">
 </head>
-
 <body>
     <!-- Lobby Screen -->
     <div id="lobbyScreen" class="lobby-screen">
@@ -60,14 +56,17 @@
                 <div id="waitingRoom" class="menu-section">
                     <h2>Waiting Room</h2>
                     <div class="room-info">
-                        <p>Room Code: <span id="displayRoomCode" class="room-code"></span></p>
+                        <p>Room Code: <span id="displayRoomCode" class="room-code">ABC123</span></p>
                         <p class="room-instruction">Share this code with your friends!</p>
                     </div>
                     
                     <div class="players-list">
-                        <h3>Players (<span id="playerCount">0</span>/3)</h3>
+                        <h3>Players (<span id="playerCount">1</span>/3)</h3>
                         <div id="playersList" class="players-container">
-                            <!-- Players will be added dynamically -->
+                            <div class="player-item">
+                                <span class="player-name">TestPlayer</span>
+                                <span class="player-status host">HOST</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -82,25 +81,57 @@
                 </div>
                 
                 <!-- Error Messages -->
-                <div id="errorMessage" class="error-message"></div>
+                <div id="errorMessage" class="error-message">This is a test error message</div>
                 
                 <!-- Connection Status -->
-                <div id="lobbyConnectionStatus" class="lobby-connection-status">Connecting to server...</div>
+                <div id="lobbyConnectionStatus" class="lobby-connection-status connected">Connected to server</div>
             </div>
         </div>
     </div>
 
-    <!-- Game Screen -->
-    <div id="gameScreen" class="game-container" style="display: none;">
-        <canvas id="gameCanvas"></canvas>
-        <div class="ui-overlay">
-            <button id="fullscreenBtn" class="fullscreen-btn">Fullscreen</button>
-            <div id="connectionStatus" class="connection-status">Connecting...</div>
-            <div id="resolutionInfo" class="resolution-info">Resolution: Loading...</div>
-        </div>
-    </div>
-
-    <script type="module" src="js/main.js"></script>
+    <script>
+        // Simple test script to demonstrate lobby navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            const screens = {
+                mainMenu: document.getElementById('mainMenu'),
+                createRoomMenu: document.getElementById('createRoomMenu'),
+                joinRoomMenu: document.getElementById('joinRoomMenu'),
+                waitingRoom: document.getElementById('waitingRoom')
+            };
+            
+            function showScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.remove('active'));
+                screens[screenName].classList.add('active');
+            }
+            
+            // Navigation handlers
+            document.getElementById('createRoomBtn').addEventListener('click', () => showScreen('createRoomMenu'));
+            document.getElementById('joinRoomBtn').addEventListener('click', () => showScreen('joinRoomMenu'));
+            document.getElementById('backFromCreateBtn').addEventListener('click', () => showScreen('mainMenu'));
+            document.getElementById('backFromJoinBtn').addEventListener('click', () => showScreen('mainMenu'));
+            
+            // Test room creation
+            document.getElementById('confirmCreateBtn').addEventListener('click', () => {
+                const name = document.getElementById('hostNameInput').value;
+                if (name.trim()) {
+                    showScreen('waitingRoom');
+                }
+            });
+            
+            // Test ready button
+            document.getElementById('readyBtn').addEventListener('click', (e) => {
+                const btn = e.target;
+                if (btn.classList.contains('ready')) {
+                    btn.classList.remove('ready');
+                    btn.textContent = 'READY';
+                } else {
+                    btn.classList.add('ready');
+                    btn.textContent = 'NOT READY';
+                }
+            });
+            
+            console.log('Lobby test interface loaded');
+        });
+    </script>
 </body>
-
 </html>

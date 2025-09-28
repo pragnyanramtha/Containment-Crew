@@ -252,6 +252,11 @@ export class Level {
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
         
+        // Debug: Log render calls occasionally
+        if (Math.random() < 0.01) {
+            console.log('Level render called:', this.name, 'bounds:', this.bounds, 'backgroundColor:', this.backgroundColor);
+        }
+        
         // Render level background
         this.renderBackground(ctx, spriteRenderer);
         
