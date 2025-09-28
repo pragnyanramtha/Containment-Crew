@@ -193,10 +193,42 @@ export class DeveloperSettings {
                 const level = parseInt(e.key);
                 this.goToLevel(level);
             }
+            
+            // F3 - Preview backgrounds
+            if (e.key === 'F3') {
+                e.preventDefault();
+                this.previewBackgrounds();
+            }
         });
         
         // Make functions globally accessible for HTML onclick handlers
         window.devSettings = this;
+    }
+
+    previewBackgrounds() {
+        if (!this.gameEngine.backgroundLoader) {
+            console.log('Background loader not available');
+            return;
+        }
+
+        const progress = this.gameEngine.backgroundLoader.getLoadingProgress();
+        console.log(`🖼️ Background Preview - ${progress.loaded}/${progress.total} loaded`);
+        
+        // Log available backgrounds
+        for (let i = 0; i < 6; i++) {
+            const hasBackground = this.gameEngine.backgroundLoader.hasBackground(i);
+            const status = hasBackground ? '✅' : '❌';
+            console.log(`Level ${i}: ${status}`);
+        }
+        
+        // Show current level background info
+        const currentLevel = this.gameEngine.levelManager?.getCurrentLevelNumber() ?? 0;
+        const currentBg = this.gameEngine.backgroundLoader.getBackground(currentLevel);
+        if (currentBg) {
+            console.log(`Current level ${currentLevel} background: ${currentBg.width}x${currentBg.height}`);
+        } else {
+            console.log(`Current level ${currentLevel}: No background loaded`);
+        }
     }
     
     show() {
@@ -314,7 +346,7 @@ export class DeveloperSettings {
         
         // Debug info panel
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(10, 10, 250, 120);
+        ctx.fillRect(10, 10, 250, 135);
         
         ctx.fillStyle = '#ffffff';
         ctx.font = '12px monospace';
@@ -324,11 +356,18 @@ export class DeveloperSettings {
         ctx.fillText(`Enemies: ${enemyCount}`, 15, 70);
         ctx.fillText(`God Mode: ${this.settings.godMode ? 'ON' : 'OFF'}`, 15, 85);
         ctx.fillText(`Fast Movement: ${this.settings.fastMovement ? 'ON' : 'OFF'}`, 15, 100);
-        ctx.fillText('F1: Dev Panel | F2: Toggle Debug', 15, 115);
+        
+        // Background loading info
+        if (this.gameEngine.backgroundLoader) {
+            const progress = this.gameEngine.backgroundLoader.getLoadingProgress();
+            ctx.fillText(`Backgrounds: ${progress.loaded}/${progress.total} (${progress.percentage}%)`, 15, 115);
+        }
+        
+        ctx.fillText('F1: Dev Panel | F2: Debug | F3: BG Preview', 15, 130);
         
         // Show player positions and health
         if (this.gameEngine.players) {
-            let yOffset = 140;
+            let yOffset = 155;
             for (const player of this.gameEngine.players.values()) {
                 const health = `${player.health}/${player.maxHealth}`;
                 const pos = `(${Math.round(player.x)}, ${Math.round(player.y)})`;
