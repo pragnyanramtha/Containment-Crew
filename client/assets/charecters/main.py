@@ -1,8 +1,9 @@
+
 from PIL import Image
 import os
-
+x = "girl"
 # File path
-file_path = "hero.png"
+file_path = f"{x}.png"
 
 # Open the sprite sheet
 sprite_sheet = Image.open(file_path)
@@ -11,13 +12,13 @@ sprite_sheet = Image.open(file_path)
 sheet_width, sheet_height = sprite_sheet.size
 
 # Define sprite size (based on grid 5 rows x 8 columns)
-cols = 8
+cols = 5
 rows = 4
 sprite_width = sheet_width // cols
 sprite_height = sheet_height // rows
 
 # Create output folder
-output_folder = "hero_sprites"
+output_folder = f"{x}_sprites"
 os.makedirs(output_folder, exist_ok=True)
 
 # Extract and save individual sprites with meaningful names
