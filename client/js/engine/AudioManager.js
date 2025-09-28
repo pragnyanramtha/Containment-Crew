@@ -106,13 +106,6 @@ export class AudioManager {
      * Load audio assets
      */
     async loadAudioAssets() {
-        // Skip audio loading in development if assets don't exist
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isDevelopment) {
-            console.log('AudioManager: Skipping audio loading in development mode');
-            this.isLoading = false;
-            return;
-        }
 
         console.log('AudioManager: Loading audio assets...');
         this.isLoading = true;
@@ -197,7 +190,7 @@ export class AudioManager {
 
                 const arrayBuffer = await response.arrayBuffer();
                 const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-                
+
                 this.audioBuffers.set(name, {
                     buffer: audioBuffer,
                     isMusic: isMusic,
@@ -207,7 +200,7 @@ export class AudioManager {
                 // Fallback to HTML5 Audio
                 const audio = new Audio(url);
                 audio.preload = 'auto';
-                
+
                 await new Promise((resolve, reject) => {
                     audio.addEventListener('canplaythrough', resolve, { once: true });
                     audio.addEventListener('error', reject, { once: true });
@@ -276,7 +269,7 @@ export class AudioManager {
                 if (fadeInDuration > 0) {
                     this.musicGainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
                     this.musicGainNode.gain.linearRampToValueAtTime(
-                        this.musicVolume, 
+                        this.musicVolume,
                         this.audioContext.currentTime + fadeInDuration
                     );
                 }
@@ -288,11 +281,11 @@ export class AudioManager {
                 // Use HTML5 Audio
                 const audioData = this.htmlAudioElements.get(name);
                 const audio = audioData.element;
-                
+
                 audio.loop = loop;
                 audio.volume = this.musicVolume * this.masterVolume;
                 audio.currentTime = 0;
-                
+
                 const playPromise = audio.play();
                 if (playPromise) {
                     playPromise.catch(error => {
@@ -325,7 +318,7 @@ export class AudioManager {
             if (this.currentMusic.type === 'webaudio') {
                 if (fadeOutDuration > 0) {
                     this.musicGainNode.gain.linearRampToValueAtTime(
-                        0, 
+                        0,
                         this.audioContext.currentTime + fadeOutDuration
                     );
                     setTimeout(() => {
@@ -368,7 +361,7 @@ export class AudioManager {
 
                 source.buffer = audioData.buffer;
                 source.playbackRate.value = pitch; // Pitch control
-                
+
                 gainNode.gain.value = volume;
                 source.connect(gainNode);
                 gainNode.connect(this.sfxGainNode);
@@ -384,10 +377,10 @@ export class AudioManager {
                 // Use HTML5 Audio (clone for multiple simultaneous plays)
                 const audioData = this.htmlAudioElements.get(sfxName);
                 const audio = audioData.element.cloneNode();
-                
+
                 audio.volume = volume * this.sfxVolume * this.masterVolume;
                 audio.playbackRate = pitch;
-                
+
                 const playPromise = audio.play();
                 if (playPromise) {
                     playPromise.catch(error => {
@@ -405,7 +398,7 @@ export class AudioManager {
      */
     setMasterVolume(volume) {
         this.masterVolume = Math.max(0, Math.min(1, volume));
-        
+
         if (this.masterGainNode) {
             this.masterGainNode.gain.value = this.masterVolume;
         }
@@ -425,7 +418,7 @@ export class AudioManager {
      */
     setMusicVolume(volume) {
         this.musicVolume = Math.max(0, Math.min(1, volume));
-        
+
         if (this.musicGainNode) {
             this.musicGainNode.gain.value = this.musicVolume;
         }
@@ -443,7 +436,7 @@ export class AudioManager {
      */
     setSFXVolume(volume) {
         this.sfxVolume = Math.max(0, Math.min(1, volume));
-        
+
         if (this.sfxGainNode) {
             this.sfxGainNode.gain.value = this.sfxVolume;
         }
@@ -456,7 +449,7 @@ export class AudioManager {
      */
     toggleMute() {
         this.isMuted = !this.isMuted;
-        
+
         if (this.isMuted) {
             if (this.masterGainNode) {
                 this.masterGainNode.gain.value = 0;
@@ -489,7 +482,7 @@ export class AudioManager {
         const fadeInterval = setInterval(() => {
             currentStep++;
             audio.volume = volumeStep * currentStep;
-            
+
             if (currentStep >= steps) {
                 clearInterval(fadeInterval);
                 audio.volume = targetVolume;
@@ -510,7 +503,7 @@ export class AudioManager {
         const fadeInterval = setInterval(() => {
             currentStep++;
             audio.volume = initialVolume - (volumeStep * currentStep);
-            
+
             if (currentStep >= steps) {
                 clearInterval(fadeInterval);
                 audio.pause();

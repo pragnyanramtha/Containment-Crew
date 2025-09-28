@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Sync Test - Sacrifices Must Be Made</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #222;
+            color: #fff;
+        }
+        
+        .test-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .status.good { background: #2d5a2d; }
+        .status.warning { background: #5a5a2d; }
+        .status.error { background: #5a2d2d; }
+        
+        canvas {
+            border: 2px solid #555;
+            display: block;
+            margin: 20px auto;
+            background: #111;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #555;
+        }
+        
+        button:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h1>Multiplayer Synchronization Test</h1>
+        <p>This test verifies that the multiplayer jittering issues have been fixed.</p>
+        
+        <div id="connectionStatus" class="status">Disconnected</div>
+        <div id="syncStatus" class="status">No sync data</div>
+        <div id="interpolationStatus" class="status">Interpolation: Not active</div>
+    </div>
+    
+    <div class="controls">
+        <button id="connectBtn">Connect to Server</button>
+        <button id="createRoomBtn" disabled>Create Room</button>
+        <button id="joinRoomBtn" disabled>Join Room (ABC123)</button>
+        <button id="readyBtn" disabled>Toggle Ready</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="test-info">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click "Connect to Server" to establish connection</li>
+            <li>Create a room or join an existing one</li>
+            <li>Open this page in another browser tab/window</li>
+            <li>Join the same room from the second window</li>
+            <li>Move around with WASD keys and observe smooth movement</li>
+            <li>Verify that players don't jitter or follow each other's viewports</li>
+        </ol>
+        
+        <h3>Expected Behavior:</h3>
+        <ul>
+            <li>✅ Smooth interpolated movement for remote players</li>
+            <li>✅ No jittering or viewport following</li>
+            <li>✅ Reduced network update frequency</li>
+            <li>✅ Local player movement feels responsive</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        import { NetworkManager } from './client/js/network/NetworkManager.js';
+        import { GameEngine } from './client/js/engine/GameEngine.js';
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const connectionStatus = document.getElementById('connectionStatus');
+        const syncStatus = document.getElementById('syncStatus');
+        const interpolationStatus = document.getElementById('interpolationStatus');
+        
+        const connectBtn = document.getElementById('connectBtn');
+        const createRoomBtn = document.getElementById('createRoomBtn');
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+        const readyBtn = document.getElementById('readyBtn');
+        
+        let networkManager = null;
+        let gameEngine = null;
+        let isConnected = false;
+        let inRoom = false;
+        
+        // Initialize
+        function init() {
+            networkManager = new NetworkManager();
+            gameEngine = new GameEngine(canvas, networkManager);
+            
+            setupNetworkCallbacks();
+            setupUI();
+            
+            console.log('Multiplayer sync test initialized');
+        }
+        
+        function setupNetworkCallbacks() {
+            networkManager.onConnectionChange = (connected) => {
+                isConnected = connected;
+                updateConnectionStatus(connected ? 'Connected' : 'Disconnected');
+                
+                createRoomBtn.disabled = !connected;
+                joinRoomBtn.disabled = !connected;
+            };
+            
+            networkManager.onRoomCreated = (data) => {
+                inRoom = true;
+                readyBtn.disabled = false;
+                updateSyncStatus(`Room created: ${data.roomCode}`);
+            };
+            
+            networkManager.onRoomJoined = (data) => {
+                inRoom = true;
+                readyBtn.disabled = false;
+                updateSyncStatus(`Joined room: ${data.roomCode}`);
+            };
+            
+            networkManager.onGameStart = (data) => {
+                updateSyncStatus('Game started - testing multiplayer sync');
+                gameEngine.startMultiplayerGame(data);
+                
+                // Start monitoring interpolation
+                monitorInterpolation();
+            };
+            
+            networkManager.onPlayerAction = (data) => {
+                updateInterpolationStatus(`Received action: ${data.action.type} from ${data.playerId.substring(0, 8)}`);
+            };
+        }
+        
+        function setupUI() {
+            connectBtn.addEventListener('click', () => {
+                if (!isConnected) {
+                    networkManager.connect();
+                    connectBtn.textContent = 'Connecting...';
+                    connectBtn.disabled = true;
+                }
+            });
+            
+            createRoomBtn.addEventListener('click', () => {
+                const playerName = `TestPlayer_${Math.random().toString(36).substring(2, 8)}`;
+                networkManager.createRoom(playerName);
+            });
+            
+            joinRoomBtn.addEventListener('click', () => {
+                const playerName = `TestPlayer_${Math.random().toString(36).substring(2, 8)}`;
+                networkManager.joinRoom('ABC123', playerName);
+            });
+            
+            readyBtn.addEventListener('click', () => {
+                networkManager.setPlayerReady(true);
+            });
+        }
+        
+        function updateConnectionStatus(status) {
+            connectionStatus.textContent = `Connection: ${status}`;
+            connectionStatus.className = 'status ' + (status === 'Connected' ? 'good' : 'error');
+            
+            if (status === 'Connected') {
+                connectBtn.textContent = 'Connected';
+                connectBtn.disabled = true;
+            }
+        }
+        
+        function updateSyncStatus(status) {
+            syncStatus.textContent = `Sync: ${status}`;
+            syncStatus.className = 'status good';
+        }
+        
+        function updateInterpolationStatus(status) {
+            interpolationStatus.textContent = `Interpolation: ${status}`;
+            interpolationStatus.className = 'status good';
+        }
+        
+        function monitorInterpolation() {
+            setInterval(() => {
+                if (gameEngine && gameEngine.players) {
+                    const remotePlayers = Array.from(gameEngine.players.values())
+                        .filter(p => p.id !== gameEngine.localPlayerId);
+                    
+                    if (remotePlayers.length > 0) {
+                        const interpolatingPlayers = remotePlayers.filter(p => p.targetPosition);
+                        updateInterpolationStatus(`${interpolatingPlayers.length}/${remotePlayers.length} players interpolating`);
+                    } else {
+                        updateInterpolationStatus('No remote players');
+                    }
+                }
+            }, 1000);
+        }
+        
+        // Start the test
+        init();
+    </script>
+</body>
+</html>
+</text>
+</invoke>

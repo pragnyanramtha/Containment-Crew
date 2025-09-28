@@ -1,5 +1,6 @@
 import { Player } from './Player.js';
 import { SpriteManager, SpriteRenderer } from './SpriteManager.js';
+import { BackgroundManager } from './BackgroundManager.js';
 import { LevelManager } from './LevelManager.js';
 import { DialogueSystem } from './DialogueSystem.js';
 import { TutorialManager } from './TutorialManager.js';
@@ -37,6 +38,9 @@ export class GameEngine {
         // Sprite system
         this.spriteManager = new SpriteManager();
         this.spriteRenderer = new SpriteRenderer(this.ctx, this.spriteManager);
+        
+        // Background system
+        this.backgroundManager = new BackgroundManager();
 
         // Level management
         this.levelManager = new LevelManager(this);
@@ -158,16 +162,41 @@ export class GameEngine {
     async startMultiplayerGame(gameData) {
         console.log('Starting multiplayer game with data:', gameData);
         console.log('NetworkManager playerId:', this.networkManager.playerId);
+        console.log('Players in gameData:', gameData.players?.length || 0);
         
-        // Clear existing players and set up multiplayer players
-        this.players.clear();
+        // Debug: Log all player data
+        if (gameData.players) {
+            gameData.players.forEach((playerData, index) => {
+                console.log(`Player ${index}:`, playerData.name, playerData.id);
+            });
+        }
         
-        // Create players from server data
+        // Remove test player if it exists
+        if (this.players.has('test-player')) {
+            this.players.delete('test-player');
+            console.log('Removed test player for multiplayer game');
+        }
+        
+        // Add/update players from server data (don't clear all players)
         if (gameData.players) {
             gameData.players.forEach(playerData => {
                 const playerId = playerData.id;
-                const player = this.createPlayerFromData(playerData);
-                this.players.set(playerId, player);
+                
+                // Check if player already exists
+                if (this.players.has(playerId)) {
+                    console.log('Player already exists, updating:', playerData.name);
+                    // Update existing player
+                    const existingPlayer = this.players.get(playerId);
+                    if (playerData.position) {
+                        existingPlayer.x = playerData.position.x;
+                        existingPlayer.y = playerData.position.y;
+                    }
+                } else {
+                    // Create new player
+                    const player = this.createPlayerFromData(playerData);
+                    this.players.set(playerId, player);
+                    console.log('Added new player to game:', player.name, playerId);
+                }
                 
                 // Set local player ID if this is our player
                 if (playerId === this.networkManager.playerId) {
@@ -178,6 +207,7 @@ export class GameEngine {
         }
         
         console.log('Created', this.players.size, 'multiplayer players');
+        console.log('All players in game:', Array.from(this.players.keys()));
         
         // Set up multiplayer state
         this.gameState = 'playing';
@@ -240,6 +270,9 @@ export class GameEngine {
      * Set up multiplayer network callbacks
      */
     setupMultiplayerCallbacks() {
+        // Set reference to game engine for validation
+        this.networkManager.gameEngine = this;
+        
         // Handle game state updates from server
         this.networkManager.onGameStateUpdate = (gameState) => {
             this.handleGameStateUpdate(gameState);
@@ -269,13 +302,18 @@ export class GameEngine {
                 this.players.set(playerId, player);
                 console.log('Added new player from server:', playerName);
             } else {
-                // Only update remote players' positions from server
-                // Local player position is handled by local input
+                // Only update remote players' positions from authoritative server state
+                // Local player position is handled by local input prediction
                 if (playerId !== this.localPlayerId) {
                     if (serverPlayer.position) {
-                        player.x = serverPlayer.position.x;
-                        player.y = serverPlayer.position.y;
+                        // Use smooth interpolation for remote players
+                        this.smoothUpdatePlayerPosition(player, serverPlayer.position.x, serverPlayer.position.y);
                     }
+                    player.health = serverPlayer.health || player.health;
+                    player.isAlive = serverPlayer.isAlive !== false;
+                } else {
+                    // For local player, only update health and alive status from server
+                    // Position is client-authoritative with server validation
                     player.health = serverPlayer.health || player.health;
                     player.isAlive = serverPlayer.isAlive !== false;
                 }
@@ -307,11 +345,11 @@ export class GameEngine {
             return;
         }
         
-        // Apply the action to the player
+        // Apply the action to the player with smooth interpolation
         switch (action.type) {
             case 'move':
-                player.x = action.x;
-                player.y = action.y;
+                // Use smooth interpolation for movement updates
+                this.smoothUpdatePlayerPosition(player, action.x, action.y);
                 player.direction = action.direction;
                 player.isMoving = action.isMoving;
                 break;
@@ -319,16 +357,49 @@ export class GameEngine {
             case 'attack':
                 // Handle attack animation/effects
                 player.direction = action.direction;
-                // Could trigger attack animation here
+                // Trigger attack animation/effects
+                if (this.combatSystem) {
+                    this.combatSystem.showAttackEffect(player.x, player.y, player.direction);
+                }
                 break;
                 
             case 'dash':
+                // For dash, update position immediately for responsiveness
                 player.x = action.x;
                 player.y = action.y;
                 player.direction = action.direction;
+                player.isDashing = true;
                 // Could trigger dash animation here
                 break;
         }
+    }
+
+    /**
+     * Smoothly interpolate player position to reduce jittering
+     */
+    smoothUpdatePlayerPosition(player, targetX, targetY) {
+        if (!player.targetPosition) {
+            player.targetPosition = { x: targetX, y: targetY };
+            player.interpolationSpeed = 10; // Adjust for smoothness vs responsiveness
+        }
+        
+        // Update target position
+        player.targetPosition.x = targetX;
+        player.targetPosition.y = targetY;
+        
+        // Don't interpolate if the distance is too large (teleport instead)
+        const distance = Math.sqrt(
+            Math.pow(targetX - player.x, 2) + 
+            Math.pow(targetY - player.y, 2)
+        );
+        
+        if (distance > 80) {
+            // Teleport for large distances (likely a correction or dash)
+            player.x = targetX;
+            player.y = targetY;
+            console.log(`Teleported player ${player.name} due to large distance: ${distance.toFixed(1)}`);
+        }
+        // Interpolation will be handled in the update loop
     }
 
     stop() {
@@ -434,12 +505,49 @@ export class GameEngine {
             const prevX = player.x;
             const prevY = player.y;
             
-            player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
+            // Handle smooth interpolation for remote players
+            if (player.id !== this.localPlayerId && player.targetPosition) {
+                const dx = player.targetPosition.x - player.x;
+                const dy = player.targetPosition.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0.5) { // Only interpolate if there's a meaningful distance
+                    const speed = player.interpolationSpeed || 10;
+                    const moveDistance = speed * deltaTime * 60; // 60fps normalized
+                    
+                    if (distance <= moveDistance) {
+                        // Close enough, snap to target
+                        player.x = player.targetPosition.x;
+                        player.y = player.targetPosition.y;
+                    } else {
+                        // Interpolate towards target
+                        const ratio = moveDistance / distance;
+                        player.x += dx * ratio;
+                        player.y += dy * ratio;
+                    }
+                } else if (distance > 0) {
+                    // Very close, just snap to avoid micro-movements
+                    player.x = player.targetPosition.x;
+                    player.y = player.targetPosition.y;
+                }
+            }
             
-            // Send network updates for local player
+            // Update player logic (only for local player or non-networked updates)
+            if (player.id === this.localPlayerId) {
+                player.update(deltaTime, this.keys, this.canvas.width, this.canvas.height);
+            } else {
+                // For remote players, only update non-position related things
+                player.updateCooldowns(deltaTime);
+                player.updateAnimation(deltaTime);
+            }
+            
+            // Send network updates for local player only
             if (player.id === this.localPlayerId && player.isAlive) {
-                // Send movement updates if position changed
-                if (player.x !== prevX || player.y !== prevY || player.isMoving !== wasMoving) {
+                // Send movement updates if position changed significantly (deadband to prevent spam)
+                const positionChanged = Math.abs(player.x - prevX) > 1.0 || Math.abs(player.y - prevY) > 1.0;
+                const stateChanged = player.isMoving !== wasMoving || player.isDashing !== wasDashing;
+                
+                if (positionChanged || stateChanged) {
                     player.sendMovementAction();
                 }
                 

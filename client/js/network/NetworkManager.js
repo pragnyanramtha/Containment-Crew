@@ -75,17 +75,20 @@ export class NetworkManager {
         
         // Load Socket.IO from CDN if not already loaded
         if (typeof io === 'undefined') {
+            console.log('Loading Socket.IO from:', '/socket.io/socket.io.js');
             const script = document.createElement('script');
             script.src = '/socket.io/socket.io.js';
             script.onload = () => {
+                console.log('Socket.IO loaded successfully');
                 this.initializeSocket(serverUrl);
             };
-            script.onerror = () => {
-                console.error('Failed to load Socket.IO');
+            script.onerror = (error) => {
+                console.error('Failed to load Socket.IO:', error);
                 this.handleConnectionError('Failed to load Socket.IO library');
             };
             document.head.appendChild(script);
         } else {
+            console.log('Socket.IO already available');
             this.initializeSocket(serverUrl);
         }
     }
@@ -101,18 +104,27 @@ export class NetworkManager {
             });
             
             this.socket.on('connect', () => {
-                console.log('Connected to server');
+                console.log('✅ Connected to server successfully!');
                 this.handleSuccessfulConnection();
             });
             
             this.socket.on('disconnect', (reason) => {
-                console.log('Disconnected from server:', reason);
+                console.log('❌ Disconnected from server:', reason);
                 this.handleDisconnection(reason);
             });
             
             this.socket.on('connect_error', (error) => {
-                console.error('Connection error:', error);
+                console.error('❌ Connection error:', error);
+                console.error('Error details:', error.message, error.description, error.context);
                 this.handleConnectionError(error.message || 'Connection failed');
+            });
+            
+            this.socket.on('reconnect_error', (error) => {
+                console.error('❌ Reconnection error:', error);
+            });
+            
+            this.socket.on('reconnect_failed', () => {
+                console.error('❌ Reconnection failed');
             });
             
             // Room management events
@@ -230,6 +242,14 @@ export class NetworkManager {
                 // Apply game state to local game
                 if (this.onGameStateUpdate) {
                     this.onGameStateUpdate(gameState);
+                }
+            });
+
+            // Handle individual player actions for smooth updates
+            this.socket.on('playerAction', (data) => {
+                console.log('Received player action:', data);
+                if (this.onPlayerAction) {
+                    this.onPlayerAction(data);
                 }
             });
             

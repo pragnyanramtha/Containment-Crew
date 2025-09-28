@@ -248,16 +248,7 @@ export class Level {
     render(ctx, spriteRenderer) {
         if (!this.isLoaded) return;
         
-        // Clear background
-        ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
-        
-        // Debug: Log render calls occasionally
-        if (Math.random() < 0.01) {
-            console.log('Level render called:', this.name, 'bounds:', this.bounds, 'backgroundColor:', this.backgroundColor);
-        }
-        
-        // Render level background
+        // Render level background (now uses BackgroundManager)
         this.renderBackground(ctx, spriteRenderer);
         
         // Render level objects
@@ -565,10 +556,29 @@ export class Level {
     
     /**
      * Render level background
-     * Override in subclasses
+     * Uses BackgroundManager for dynamic backgrounds
      */
     renderBackground(ctx, spriteRenderer) {
-        // Base implementation - override in subclasses
+        // Get background from game engine's background manager
+        if (this.gameEngine && this.gameEngine.backgroundManager) {
+            const background = this.gameEngine.backgroundManager.getBackground(
+                this.levelNumber, 
+                this.bounds.width, 
+                this.bounds.height
+            );
+            
+            if (background) {
+                ctx.drawImage(background, 0, 0);
+            } else {
+                // Fallback to solid color
+                ctx.fillStyle = this.backgroundColor;
+                ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
+            }
+        } else {
+            // Fallback to solid color
+            ctx.fillStyle = this.backgroundColor;
+            ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
+        }
     }
     
     /**

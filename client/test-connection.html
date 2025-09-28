@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Test</title>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Testing...</div>
+    <div id="log"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const logDiv = document.getElementById('log');
+        
+        function log(message) {
+            console.log(message);
+            logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+        
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+            log('Status: ' + message);
+        }
+        
+        // Test 1: Check if we can load Socket.IO
+        updateStatus('Loading Socket.IO...');
+        
+        const script = document.createElement('script');
+        script.src = '/socket.io/socket.io.js';
+        
+        script.onload = () => {
+            log('✅ Socket.IO loaded successfully');
+            updateStatus('Socket.IO loaded, attempting connection...');
+            
+            // Test 2: Try to connect
+            const serverUrl = `${window.location.protocol}//${window.location.host}`;
+            log('Connecting to: ' + serverUrl);
+            
+            const socket = io(serverUrl, {
+                timeout: 10000,
+                transports: ['websocket', 'polling']
+            });
+            
+            socket.on('connect', () => {
+                log('✅ Connected successfully! Socket ID: ' + socket.id);
+                updateStatus('Connected successfully!');
+            });
+            
+            socket.on('connect_error', (error) => {
+                log('❌ Connection error: ' + error.message);
+                updateStatus('Connection failed: ' + error.message);
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log('❌ Disconnected: ' + reason);
+                updateStatus('Disconnected: ' + reason);
+            });
+            
+            // Test server response
+            socket.on('connected', (data) => {
+                log('✅ Server responded: ' + data.message);
+            });
+        };
+        
+        script.onerror = (error) => {
+            log('❌ Failed to load Socket.IO');
+            updateStatus('Failed to load Socket.IO');
+        };
+        
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

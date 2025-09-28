@@ -64,8 +64,12 @@ export class LevelManager {
             backgroundColor: '#1a1a2a',
             objectives: ['defeat_all_enemies', 'survive'],
             enemies: [
-                { type: 'weak_zombie', count: 5 }
-            ]
+                { type: 'weak_zombie', count: 3, spawnDelay: 0 },
+                { type: 'normal_zombie', count: 2, spawnDelay: 10 },
+                { type: 'fast_zombie', count: 1, spawnDelay: 20 }
+            ],
+            hazards: ['radiation_zones'],
+            specialMechanics: ['progressive_spawning']
         });
         
         // Add tutorial markers to Level 0

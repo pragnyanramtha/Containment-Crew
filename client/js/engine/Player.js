@@ -68,7 +68,7 @@ export class Player {
         // Network validation
         this.networkManager = null;
         this.lastNetworkUpdate = 0;
-        this.networkUpdateInterval = 50; // Send updates every 50ms
+        this.networkUpdateInterval = 100; // Send updates every 100ms (reduced frequency)
     }
     
     // Set network manager for sending validated actions
@@ -171,6 +171,17 @@ export class Player {
                 this.isDashing = false;
                 this.speed = this.baseSpeed; // Reset to normal speed
             }
+        }
+    }
+
+    updateAnimation(deltaTime) {
+        // Update animation timer
+        this.animationTime += deltaTime;
+        
+        // Track direction changes
+        if (this.direction !== this.lastDirection) {
+            this.animationTime = 0; // Reset animation when direction changes
+            this.lastDirection = this.direction;
         }
     }
     

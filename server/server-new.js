@@ -14,14 +14,24 @@ const server = createServer(app);
 const io = new Server(server, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
-    }
+        methods: ["GET", "POST"],
+        allowedHeaders: ["*"],
+        credentials: false
+    },
+    allowEIO3: true, // Allow Engine.IO v3 clients
+    transports: ['websocket', 'polling']
 });
 
 const PORT = process.env.PORT || 3000;
 
 // Initialize game state manager
 const gameStateManager = new GameStateManager();
+
+// Add request logging
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url} from ${req.ip}`);
+    next();
+});
 
 // Serve static files from client directory
 app.use(express.static(path.join(__dirname, '../client')));
@@ -48,15 +58,23 @@ app.get('/api/rooms/:code', (req, res) => {
 // Set up GameStateManager event handlers
 gameStateManager.on('playerJoined', ({ roomCode, player }) => {
     const roomState = gameStateManager.getRoomState(roomCode);
-    io.to(roomCode).emit('roomUpdate', {
-        players: roomState.players,
-        gameState: roomState.state
-    });
+    console.log(`📢 Player joined ${roomCode}: ${player.name}, total players: ${roomState ? roomState.players.length : 'null'}`);
     
-    io.to(roomCode).emit('playerJoined', {
-        playerId: player.id,
-        playerName: player.name
-    });
+    if (roomState) {
+        console.log(`📤 Broadcasting roomUpdate to room ${roomCode} with players:`, roomState.players.map(p => p.name));
+        
+        io.to(roomCode).emit('roomUpdate', {
+            players: roomState.players,
+            gameState: roomState.state
+        });
+        
+        io.to(roomCode).emit('playerJoined', {
+            playerId: player.id,
+            playerName: player.name
+        });
+    } else {
+        console.error('❌ Failed to get room state for playerJoined event');
+    }
 });
 
 gameStateManager.on('playerLeft', ({ roomCode, playerId, playerName }) => {
@@ -90,6 +108,11 @@ gameStateManager.on('playerReady', ({ roomCode, playerId, ready }) => {
             setTimeout(() => {
                 if (gameStateManager.startGame(roomCode)) {
                     const updatedState = gameStateManager.getRoomState(roomCode);
+                    console.log(`🎮 Starting game in room ${roomCode} with ${updatedState.players.length} players:`);
+                    updatedState.players.forEach(player => {
+                        console.log(`  - ${player.name} (${player.id})`);
+                    });
+                    
                     io.to(roomCode).emit('gameStart', {
                         level: updatedState.currentLevel,
                         players: updatedState.players
@@ -126,7 +149,7 @@ gameStateManager.on('fullStateSync', ({ roomCode, state }) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-    console.log(`Player connected: ${socket.id}`);
+    console.log(`✅ Player connected: ${socket.id} from ${socket.handshake.address}`);
     
     // Handle room creation
     socket.on('createRoom', (playerName) => {
@@ -141,6 +164,20 @@ io.on('connection', (socket) => {
                 playerName: playerName,
                 isHost: true
             });
+            
+            // Immediately send room update to show the creator in the player list
+            const roomState = gameStateManager.getRoomState(room.code);
+            console.log(`🏠 Room ${room.code} state:`, roomState ? `${roomState.players.length} players` : 'null');
+            
+            if (roomState) {
+                socket.emit('roomUpdate', {
+                    players: roomState.players,
+                    gameState: roomState.state
+                });
+                console.log(`📤 Sent roomUpdate to creator with ${roomState.players.length} players`);
+            } else {
+                console.error('❌ Failed to get room state for', room.code);
+            }
         } catch (error) {
             socket.emit('createError', { message: error.message });
         }
@@ -201,8 +238,8 @@ io.on('connection', (socket) => {
     });
     
     // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log(`Player disconnected: ${socket.id}`);
+    socket.on('disconnect', (reason) => {
+        console.log(`❌ Player disconnected: ${socket.id}, reason: ${reason}`);
         
         const roomCode = socket.roomCode;
         if (roomCode) {

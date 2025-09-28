@@ -552,8 +552,8 @@ io.on('connection', (socket) => {
             validated: true
         });
 
-        // Broadcast authoritative state update periodically
-        if (Math.random() < 0.1) { // 10% chance to send state sync
+        // Reduced frequency of authoritative state updates to prevent conflicts
+        if (Math.random() < 0.02) { // 2% chance to send state sync (reduced from 10%)
             broadcastGameState(roomCode);
         }
     });

@@ -13,9 +13,9 @@ export class GameStateManager extends EventEmitter {
         // Game rooms
         this.rooms = new Map();
         
-        // State sync settings
-        this.syncInterval = 100; // 10 FPS state sync
-        this.fullSyncInterval = 1000; // Full sync every second
+        // State sync settings - reduced frequency to prevent jittering
+        this.syncInterval = 200; // 5 FPS state sync (reduced from 10 FPS)
+        this.fullSyncInterval = 2000; // Full sync every 2 seconds (reduced from 1 second)
         
         // Start sync loops
         this.startSyncLoops();
@@ -50,11 +50,14 @@ export class GameStateManager extends EventEmitter {
             tickRate: 60 // Server tick rate
         };
         
-        // Add host player
-        this.addPlayerToRoom(roomCode, hostPlayerId, hostPlayerName, true);
-        
+        // Store room first, then add host player
         this.rooms.set(roomCode, room);
-        console.log(`Room ${roomCode} created by ${hostPlayerName}`);
+        
+        // Add host player
+        const hostPlayer = this.addPlayerToRoom(roomCode, hostPlayerId, hostPlayerName, true);
+        
+        console.log(`🏠 Room ${roomCode} created by ${hostPlayerName}, host player:`, hostPlayer ? hostPlayer.name : 'failed');
+        console.log(`🏠 Room now has ${room.players.size} players`);
         
         return room;
     }
@@ -109,6 +112,8 @@ export class GameStateManager extends EventEmitter {
         room.playerOrder.push(playerId);
         room.lastUpdate = Date.now();
         room.stateVersion++;
+        
+        console.log(`👤 Added player ${player.name} to room ${roomCode}, room now has ${room.players.size} players`);
         
         this.emit('playerJoined', { roomCode, player });
         

@@ -227,12 +227,9 @@ export class LobbyManager {
         
         document.getElementById('displayRoomCode').textContent = data.roomCode;
         this.showScreen('waitingRoom');
-        this.updatePlayersList(data.players || [{ 
-            id: data.playerId, 
-            name: this.playerName, 
-            isHost: true, 
-            ready: false 
-        }]);
+        
+        // Don't create fake player list - wait for roomUpdate from server
+        console.log('Room created, waiting for roomUpdate...');
     }
     
     handleRoomJoined(data) {
@@ -245,6 +242,11 @@ export class LobbyManager {
     
     handleRoomUpdate(data) {
         if (!this.roomData) return;
+        
+        console.log('📢 Room update received:', data.players?.length || 0, 'players');
+        data.players?.forEach(player => {
+            console.log(`  - ${player.name} (${player.id}) ${player.isHost ? '[HOST]' : ''} ${player.ready ? '[READY]' : '[WAITING]'}`);
+        });
         
         this.updatePlayersList(data.players);
         
@@ -284,10 +286,19 @@ export class LobbyManager {
     }
     
     updatePlayersList(players) {
+        console.log('🔄 Updating players list:', players);
+        
         const playersList = document.getElementById('playersList');
         const playerCount = document.getElementById('playerCount');
         
+        if (!players || !Array.isArray(players)) {
+            console.error('❌ Invalid players data:', players);
+            playerCount.textContent = '0';
+            return;
+        }
+        
         playerCount.textContent = players.length;
+        console.log(`📊 Player count updated to: ${players.length}`);
         
         playersList.innerHTML = '';
         
