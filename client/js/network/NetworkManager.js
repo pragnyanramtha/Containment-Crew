@@ -228,16 +228,7 @@ export class NetworkManager {
             this.socket.on('gameStateSync', (gameState) => {
                 console.log('Received game state sync:', gameState);
                 
-                // Validate the game state if validation manager is available
-                if (this.gameEngine && this.gameEngine.validationManager) {
-                    const validation = this.gameEngine.validationManager.validateGameState(gameState);
-                    if (!validation.valid) {
-                        console.warn('Game state validation failed:', validation.issues);
-                        // Request fresh state sync
-                        this.requestStateSync();
-                        return;
-                    }
-                }
+                // Game state validation removed for compatibility
                 
                 // Apply game state to local game
                 if (this.onGameStateUpdate) {
@@ -342,17 +333,9 @@ export class NetworkManager {
         this.socket.emit('playerAction', action);
     }
     
-    // Enhanced method with validation
+    // Enhanced method (validation removed for compatibility)
     sendValidatedPlayerAction(action) {
-        // Client-side validation first (if validation manager is available)
-        if (this.gameEngine && this.gameEngine.validationManager) {
-            const validation = this.gameEngine.validationManager.validatePlayerAction(this.playerId, action);
-            if (!validation.valid) {
-                console.warn('Client-side validation failed:', validation.reason);
-                return false;
-            }
-        }
-        
+        // Send action directly without validation
         this.sendPlayerAction(action);
         return true;
     }
@@ -364,8 +347,10 @@ export class NetworkManager {
         }
     }
     
-    // Report suspected cheating
+    // Cheat reporting removed for compatibility
     reportCheat(suspectedPlayerId, reason, evidence) {
+        // Functionality disabled for compatibility
+        return;
         if (this.isConnected && this.socket) {
             this.socket.emit('reportCheat', {
                 suspectedPlayerId,

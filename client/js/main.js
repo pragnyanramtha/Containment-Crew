@@ -26,6 +26,17 @@ function initializeGame() {
     // Initialize lobby manager
     const lobbyManager = new LobbyManager(networkManager);
     
+    // Show loading message
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '24px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Loading sprites and backgrounds...', canvas.width / 2, canvas.height / 2);
+    ctx.font = '16px monospace';
+    ctx.fillText('This may take a moment...', canvas.width / 2, canvas.height / 2 + 40);
+    
     // Initialize game engine (handles all canvas setup)
     const gameEngine = new GameEngine(canvas, networkManager);
     

@@ -556,10 +556,24 @@ export class Level {
     
     /**
      * Render level background
-     * Uses BackgroundManager for dynamic backgrounds
+     * Uses BackgroundLoader for preloaded images, falls back to BackgroundManager
      */
     renderBackground(ctx, spriteRenderer) {
-        // Get background from game engine's background manager
+        // Try to use preloaded background image first
+        if (this.gameEngine && this.gameEngine.backgroundLoader) {
+            const backgroundRendered = this.gameEngine.backgroundLoader.renderBackground(
+                ctx, 
+                this.levelNumber, 
+                this.bounds.width, 
+                this.bounds.height
+            );
+            
+            if (backgroundRendered) {
+                return; // Successfully rendered background image
+            }
+        }
+        
+        // Fallback to procedural background from BackgroundManager
         if (this.gameEngine && this.gameEngine.backgroundManager) {
             const background = this.gameEngine.backgroundManager.getBackground(
                 this.levelNumber, 
@@ -569,25 +583,16 @@ export class Level {
             
             if (background) {
                 ctx.drawImage(background, 0, 0);
-            } else {
-                // Fallback to solid color
-                ctx.fillStyle = this.backgroundColor;
-                ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
+                return;
             }
-        } else {
-            // Fallback to solid color
-            ctx.fillStyle = this.backgroundColor;
-            ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
         }
+        
+        // Final fallback to solid color
+        ctx.fillStyle = this.backgroundColor;
+        ctx.fillRect(0, 0, this.bounds.width, this.bounds.height);
     }
     
-    /**
-     * Render level-specific content
-     * Override in subclasses
-     */
-    renderLevel(ctx, spriteRenderer) {
-        // Base implementation - override in subclasses
-    }
+
     
     /**
      * Render level UI elements

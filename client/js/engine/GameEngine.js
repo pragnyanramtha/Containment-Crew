@@ -1,6 +1,8 @@
 import { Player } from './Player.js';
 import { SpriteManager, SpriteRenderer } from './SpriteManager.js';
+import { SpriteLoader } from './SpriteLoader.js';
 import { BackgroundManager } from './BackgroundManager.js';
+import { BackgroundLoader } from './BackgroundLoader.js';
 import { LevelManager } from './LevelManager.js';
 import { DialogueSystem } from './DialogueSystem.js';
 import { TutorialManager } from './TutorialManager.js';
@@ -12,7 +14,12 @@ import { DeveloperSettings } from './DeveloperSettings.js';
 import { HUDManager } from './HUDManager.js';
 import { VisualEffectsManager } from './VisualEffectsManager.js';
 import { AudioManager } from './AudioManager.js';
-import { ValidationManager } from './ValidationManager.js';
+// import { ValidationManager } from './ValidationManager.js'; // Removed for compatibility
+import { InteractiveSystem } from './InteractiveSystem.js';
+import { StoryManager } from './StoryManager.js';
+import { PowerUpManager } from './PowerUpManager.js';
+import { DialogueUI } from './DialogueUI.js';
+// import { MiniGameSystem } from './MiniGameSystem.js';
 
 export class GameEngine {
     constructor(canvas, networkManager) {
@@ -37,10 +44,12 @@ export class GameEngine {
 
         // Sprite system
         this.spriteManager = new SpriteManager();
+        this.spriteLoader = new SpriteLoader(this.spriteManager);
         this.spriteRenderer = new SpriteRenderer(this.ctx, this.spriteManager);
         
         // Background system
         this.backgroundManager = new BackgroundManager();
+        this.backgroundLoader = new BackgroundLoader();
 
         // Level management
         this.levelManager = new LevelManager(this);
@@ -75,8 +84,23 @@ export class GameEngine {
         // Audio system
         this.audioManager = new AudioManager();
 
-        // Validation system
-        this.validationManager = new ValidationManager(this);
+        // Validation system (disabled for compatibility)
+        // this.validationManager = new ValidationManager(this);
+
+        // Interactive system
+        this.interactiveSystem = new InteractiveSystem(this);
+
+        // Story system
+        this.storyManager = new StoryManager(this);
+
+        // Power-up system
+        this.powerUpManager = new PowerUpManager(this);
+
+        // Dialogue UI system
+        this.dialogueUI = new DialogueUI(this);
+
+        // Mini-game system
+        // this.miniGameSystem = new MiniGameSystem(this);
 
         // Game state
         this.gameState = 'character_selection'; // 'character_selection', 'playing'
@@ -101,9 +125,8 @@ export class GameEngine {
         this.setupResizeHandler();
         this.setupFullscreenHandler();
 
-        // Initialize sprites and create test player
-        this.initializeSprites();
-        this.createTestPlayer();
+        // Initialize sprites and create test player (async)
+        this.initializeGame();
 
         // Initialize audio system
         this.initializeAudio();
@@ -112,24 +135,31 @@ export class GameEngine {
         this.handleResize();
     }
 
-    createEnemySprites() {
-        // Create zombie sprites
-        const zombieColors = {
-            body: '#44aa44',
-            indicator: '#ffffff',
-            border: '#224422'
-        };
-
-        const bossColors = {
-            body: '#aa4444',
-            indicator: '#ffffff',
-            border: '#442222'
-        };
-
-        this.spriteManager.createDirectionalSprites('zombie_weak', 28, 28, zombieColors);
-        this.spriteManager.createDirectionalSprites('zombie_normal', 32, 32, zombieColors);
-        this.spriteManager.createDirectionalSprites('mutant_boss', 48, 48, bossColors);
+    async initializeGame() {
+        // Initialize sprites and backgrounds in parallel
+        const [spriteResult, backgroundResult] = await Promise.allSettled([
+            this.initializeSprites(),
+            this.backgroundLoader.preloadAllBackgrounds()
+        ]);
+        
+        if (spriteResult.status === 'rejected') {
+            console.error('Failed to load sprites:', spriteResult.reason);
+        }
+        
+        if (backgroundResult.status === 'rejected') {
+            console.error('Failed to load backgrounds:', backgroundResult.reason);
+        }
+        
+        // Then create test player
+        this.createTestPlayer();
+        
+        // Initialize power-up system
+        this.powerUpManager.initialize();
+        
+        console.log('Game sprites, backgrounds, and entities initialized');
     }
+
+
 
     async initializeAudio() {
         console.log('Initializing audio system...');
@@ -444,10 +474,10 @@ export class GameEngine {
             this.audioManager.destroy();
         }
 
-        // Clean up validation system
-        if (this.validationManager) {
-            this.validationManager.destroy();
-        }
+        // Clean up validation system (disabled for compatibility)
+        // if (this.validationManager) {
+        //     this.validationManager.destroy();
+        // }
 
         // Remove event listeners
         document.removeEventListener('keydown', this.handleKeyDown);
@@ -595,6 +625,21 @@ export class GameEngine {
         // Update tutorial system
         this.tutorialManager.update(deltaTime, players);
 
+        // Update interactive system
+        this.interactiveSystem.update(deltaTime, players);
+
+        // Update story system
+        this.storyManager.update(deltaTime);
+
+        // Update power-up system
+        this.powerUpManager.update(deltaTime, players);
+
+        // Update dialogue UI
+        this.dialogueUI.update(deltaTime);
+
+        // Update mini-game system
+        // this.miniGameSystem.update(deltaTime, players);
+
         // Update developer settings
         this.developerSettings.update(deltaTime);
 
@@ -645,6 +690,15 @@ export class GameEngine {
         // Render enemies
         this.enemyManager.render(this.ctx, this.spriteRenderer);
 
+        // Render interactive objects
+        this.interactiveSystem.render(this.ctx);
+
+        // Render power-ups
+        this.powerUpManager.render(this.ctx);
+
+        // Render mini-games
+        // this.miniGameSystem.render(this.ctx);
+
         // Render all players with sprite system
         for (const player of this.players.values()) {
             player.render(this.ctx, this.spriteRenderer);
@@ -659,6 +713,9 @@ export class GameEngine {
         // Render dialogue system (on top of everything)
         this.dialogueSystem.render(this.ctx);
 
+        // Render dialogue UI (bottom dialogue box)
+        this.dialogueUI.render(this.ctx);
+
         // Render death manager (game over screen, death messages)
         this.deathManager.render(this.ctx);
 
@@ -669,7 +726,7 @@ export class GameEngine {
         this.hudManager.render();
 
         // Render debug info
-        this.renderDebugInfo();
+        // this.renderDebugInfo();
 
         // Render developer settings debug info
         this.developerSettings.renderDebugInfo(this.ctx);
@@ -729,6 +786,45 @@ export class GameEngine {
                 // Only execute local attack if validation passed
                 if (attackSent !== false) {
                     this.combatSystem.tryPlayerAttack(localPlayer.id, 0, 0); // Position not needed for swing attacks
+                }
+            }
+        }
+
+        // Handle super attack (Q key)
+        if (event.code === 'KeyQ' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
+            event.preventDefault();
+            const localPlayer = this.getLocalPlayer();
+            if (localPlayer && localPlayer.isAlive) {
+                const success = this.powerUpManager.handleSuperAttack(localPlayer);
+                if (success) {
+                    // Play super attack sound
+                    this.audioManager.playSFX('super_attack');
+                }
+            }
+        }
+
+        // Handle super speed activation (C key)
+        if (event.code === 'KeyC' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
+            event.preventDefault();
+            const localPlayer = this.getLocalPlayer();
+            if (localPlayer && localPlayer.isAlive) {
+                // Check if player has super speed power-up available
+                this.tryActivateSuperSpeed(localPlayer);
+            }
+        }
+
+        // Handle NPC interaction (E key)
+        if (event.code === 'KeyE' && !this.deathManager.isGameOver() && this.gameState === 'playing') {
+            event.preventDefault();
+            
+            // Check if dialogue UI is active first
+            if (this.dialogueUI.isActive()) {
+                this.dialogueUI.handleInput('KeyE');
+            } else {
+                // Check for nearby NPCs
+                const localPlayer = this.getLocalPlayer();
+                if (localPlayer && localPlayer.isAlive) {
+                    this.checkNPCInteraction(localPlayer);
                 }
             }
         }
@@ -847,7 +943,7 @@ export class GameEngine {
         this.setupPixelArtRendering();
 
         // Update resolution info
-        this.updateResolutionInfo();
+        // this.updateResolutionInfo();
 
         console.log(`Canvas resized: ${displayWidth}x${displayHeight} (scale: ${this.scaleFactor.toFixed(2)})`);
     }
@@ -898,8 +994,11 @@ export class GameEngine {
         }
     }
 
-    initializeSprites() {
-        // Create directional sprites for different player colors
+    async initializeSprites() {
+        // Load all game sprites using the comprehensive sprite loader
+        await this.spriteLoader.loadAllSprites();
+        
+        // Create backward compatibility sprites for existing player IDs
         const playerColors = [
             { body: '#00ff00', indicator: '#ffffff', border: '#004400' }, // Green
             { body: '#0088ff', indicator: '#ffffff', border: '#004488' }, // Blue  
@@ -913,9 +1012,6 @@ export class GameEngine {
 
         // Create test player sprite
         this.spriteManager.createDirectionalSprites('player_test-player', 32, 32, playerColors[0]);
-
-        // Create enemy sprites
-        this.createEnemySprites();
     }
 
     createTestPlayer() {
@@ -1001,6 +1097,56 @@ export class GameEngine {
     // Audio management access
     getAudioManager() {
         return this.audioManager;
+    }
+
+    // Background loading access
+    getBackgroundLoader() {
+        return this.backgroundLoader;
+    }
+
+    // Power-up system access
+    getPowerUpManager() {
+        return this.powerUpManager;
+    }
+
+    /**
+     * Try to activate super speed for player
+     */
+    tryActivateSuperSpeed(player) {
+        // Check if player has super speed available in inventory
+        const playerPowerUps = this.powerUpManager.getPlayerPowerUps(player.id);
+        
+        // For now, allow manual super speed activation if player has collected one recently
+        // In a full implementation, this would check inventory
+        if (!playerPowerUps.has('super_speed')) {
+            // Spawn a super speed power-up for testing
+            this.powerUpManager.spawnPowerUp('super_speed', player.x, player.y);
+            console.log('Super speed power-up spawned for testing');
+        }
+    }
+
+    /**
+     * Check for NPC interaction
+     */
+    checkNPCInteraction(player) {
+        const currentLevel = this.getCurrentLevel();
+        if (!currentLevel || !currentLevel.npcs) return;
+
+        // Check all NPCs in current level
+        for (const npc of currentLevel.npcs) {
+            if (!npc.isActive || !npc.isVisible) continue;
+
+            const distance = Math.sqrt(
+                Math.pow(player.x - npc.x, 2) + Math.pow(player.y - npc.y, 2)
+            );
+
+            if (distance < npc.interactionRadius) {
+                // Start dialogue with this NPC
+                this.dialogueUI.showDialogue(npc);
+                console.log(`Started dialogue with ${npc.name || npc.id}`);
+                return;
+            }
+        }
     }
 
     renderDebugInfo() {

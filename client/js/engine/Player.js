@@ -47,6 +47,12 @@ export class Player {
         this.dashDuration = 0.2; // 0.2 seconds
         this.isDashing = false;
         this.dashTime = 0;
+
+        // Power-up properties
+        this.hasSuperAttack = false;
+        this.superAttackCooldown = 0;
+        this.hasMultiShot = false;
+        this.invulnerable = false;
         
         // Animation state
         this.direction = 'down'; // down, up, left, right
@@ -56,7 +62,8 @@ export class Player {
         
         // Sprite properties
         this.spriteScale = 1;
-        this.spriteBaseName = `player_${this.id}`;
+        this.spriteBaseName = `player_${this.characterType}`;
+        this.fallbackSpriteName = `player_${this.id}`; // Fallback for existing players
         
         // Collision bounds
         this.collisionPadding = 4; // Smaller collision box than sprite
@@ -172,6 +179,11 @@ export class Player {
                 this.speed = this.baseSpeed; // Reset to normal speed
             }
         }
+
+        // Update super attack cooldown
+        if (this.superAttackCooldown > 0) {
+            this.superAttackCooldown -= deltaTime;
+        }
     }
 
     updateAnimation(deltaTime) {
@@ -286,8 +298,14 @@ export class Player {
     
     render(ctx, spriteRenderer = null) {
         if (spriteRenderer) {
-            // Use sprite rendering
-            const spriteName = `${this.spriteBaseName}_${this.direction}`;
+            // Use sprite rendering - try character-specific sprite first
+            let spriteName = `${this.spriteBaseName}_${this.direction}`;
+            
+            // Fallback to old sprite naming if character sprite doesn't exist
+            if (!spriteRenderer.spriteManager.hasSprite(spriteName)) {
+                spriteName = `${this.fallbackSpriteName}_${this.direction}`;
+            }
+            
             if (this.isAlive) {
                 spriteRenderer.drawSprite(spriteName, this.x, this.y, this.spriteScale);
             } else {
@@ -301,6 +319,45 @@ export class Player {
         
         // Draw player name/ID (simplified since HUD handles health bars)
         this.renderPlayerInfo(ctx);
+    }
+
+    /**
+     * Update player character type and sprite
+     */
+    setCharacterType(characterType) {
+        this.characterType = characterType;
+        this.spriteBaseName = `player_${this.characterType}`;
+        
+        // Update character-specific attributes
+        switch (characterType) {
+            case 'scout':
+                this.baseSpeed = 250;
+                this.strength = 2;
+                this.maxHealth = 75;
+                break;
+            case 'tank':
+                this.baseSpeed = 150;
+                this.strength = 3;
+                this.maxHealth = 125;
+                break;
+            case 'medic':
+                this.baseSpeed = 200;
+                this.strength = 2;
+                this.maxHealth = 100;
+                break;
+            case 'engineer':
+                this.baseSpeed = 200;
+                this.strength = 2;
+                this.maxHealth = 100;
+                break;
+        }
+        
+        // Update current health if needed
+        if (this.health > this.maxHealth) {
+            this.health = this.maxHealth;
+        }
+        
+        this.speed = this.baseSpeed;
     }
     
     renderDeadPlayer(ctx, spriteRenderer) {
@@ -419,6 +476,9 @@ export class Player {
         // Check for invincibility (developer setting)
         if (this.isInvincible) return;
         
+        // Check for power-up invulnerability (shield)
+        if (this.invulnerable) return;
+        
         this.health -= amount;
         if (this.health <= 0) {
             this.health = 0;
@@ -524,5 +584,22 @@ export class Player {
         };
         
         this.networkManager.sendPlayerAction(action);
+    }
+
+    /**
+     * Check if player has a specific item
+     */
+    hasItem(itemName) {
+        // This would integrate with an inventory system
+        // For now, return false as a placeholder
+        return false;
+    }
+
+    /**
+     * Add item to player inventory
+     */
+    addItem(itemName) {
+        // This would integrate with an inventory system
+        console.log(`Player ${this.id} received item: ${itemName}`);
     }
 }
